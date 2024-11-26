@@ -99,11 +99,11 @@ def submit(
         os_info = subprocess.run(["uname"], capture_output=True, text=True)
         os_type = "Mac" if "Darwin" in os_info.stdout else "Linux"
 
-    env_info = {"python_version": python_version.stdout.strip(), "os_info": os_type, "script": script}
+    run_info = {"python_version": python_version.stdout.strip(), "os_info": os_type, "script": script}
 
-    # write the env_info to a file called env_info.json
-    with open("tasknode_deploy/env_info.json", "w") as f:
-        json.dump(env_info, f)
+    # write the run_info to a file called run_info.json
+    with open("tasknode_deploy/run_info.json", "w") as f:
+        json.dump(run_info, f)
 
     # zip the tasknode_deploy folder
     subprocess.run(["zip", "-r", "tasknode_deploy.zip", "tasknode_deploy/"])
