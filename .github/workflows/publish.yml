@@ -8,6 +8,10 @@ on:
       - 'v*'
   workflow_dispatch:
 
+# Add permissions configuration
+permissions:
+  id-token: write
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
