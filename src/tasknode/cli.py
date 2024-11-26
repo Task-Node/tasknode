@@ -8,17 +8,45 @@ import webbrowser
 from datetime import datetime, timedelta
 import click
 
-app = typer.Typer()
+app = typer.Typer(no_args_is_help=True)
 
 API_URL = "https://api-dev.tasknode.xyz"  # Backend API URL
 SERVICE_NAME = "tasknode-cli"
 
+def show_available_commands(ctx: typer.Context, value: bool):
+    if value:
+        typer.echo("\nAvailable commands:")
+        typer.echo("  submit    Submit a Python script to be run in the cloud")
+        typer.echo("  help      Show help for the TaskNode CLI")
+        raise typer.Exit()
+
+@app.callback()
+def callback(
+    ctx: typer.Context,
+    help: bool = typer.Option(None, "--help", "-h", is_eager=True, callback=show_available_commands),
+):
+    """
+    TaskNode CLI - Run your Python scripts in the cloud
+    """
+    pass
 
 @app.command()
-def submit(script: str, args: str = ""):
+def help():
+    """
+    Show help for the TaskNode CLI.
+    """
+    show_available_commands(None, True)
+
+@app.command()
+def submit(
+    script: str = typer.Argument(..., help="The Python script to run (relative to the current directory, for example 'script.py' or 'path/to/script.py')"),
+):
     """
     Submit a Python script to be run in the cloud.
     """
+    if not os.path.exists(script):
+        typer.echo(f"Error: Script '{script}' not found", err=True)
+        raise typer.Exit(1)
 
     # create a new folder called tasknode_deploy
     subprocess.run(["mkdir", "tasknode_deploy"])
@@ -71,7 +99,7 @@ def submit(script: str, args: str = ""):
         os_info = subprocess.run(["uname"], capture_output=True, text=True)
         os_type = "Mac" if "Darwin" in os_info.stdout else "Linux"
 
-    env_info = {"python_version": python_version.stdout.strip(), "os_info": os_type}
+    env_info = {"python_version": python_version.stdout.strip(), "os_info": os_type, "script": script}
 
     # write the env_info to a file called env_info.json
     with open("tasknode_deploy/env_info.json", "w") as f:
