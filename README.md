@@ -1,26 +1,44 @@
-# TaskNode CLI
+# TaskNode CLI 🚀
 
-A command-line tool for running Python scripts in the cloud.
+> **Note**: TaskNode is currently in beta. While fully functional, you may encounter occasional issues. Please report any bugs on our GitHub issues page.
 
-## Installation
+A powerful command-line tool that lets you run Python scripts in the cloud with zero infrastructure setup.
+
+## ✨ Features
+
+- **Zero Configuration**: Just install and run - we handle all the cloud setup
+- **Dependency Management**: Automatic detection and packaging of project dependencies
+- **Cross-Platform**: Works on Linux, macOS, and Windows
+
+## 🔧 Installation
 
 ```bash
 pip install tasknode
 ```
 
-To install the development version from source, clone the repository and run:
+For the latest development version:
 
 ```bash
+git clone https://github.com/tasknode/tasknode-cli.git
+cd tasknode-cli
 pip install -e .
 ```
 
+## 🚀 Quick Start
 
-After this setup, you can:
-- Use `pip install .` to install the package
-- Use `pip install -e .` for development installation
-- Run the CLI with just `tasknode submit script.py` from anywhere
-- Distribute your package to PyPI using `python -m build` and `python -m twine upload dist/*`
+```bash
+# Submit a script to run in the cloud
+tasknode submit script.py
 
-Note: The `server/config/test.py` file seems to be part of a different component (server-side), so I didn't include it in the CLI package structure.
+# Get help and see all commands
+tasknode help
+```
 
-Would you like me to explain any part of this setup in more detail?
+## 📦 What Gets Uploaded?
+
+When you submit a script, TaskNode automatically:
+- 📁 Packages your project directory
+- 🔍 Excludes development folders (.git, venv, __pycache__, etc.)
+- 📝 Captures dependencies in requirements-tasknode.txt
+- ℹ️ Records Python version and system information
+- 🔒 Securely uploads everything to our cloud infrastructure
