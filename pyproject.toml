@@ -1,0 +1,21 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "tasknode"
+version = "0.0.0"
+authors = [
+    { name = "Daniel Newman", email = "daniel@tasknode.xyz" },
+]
+description = "TaskNode CLI tool for running Python scripts in the cloud"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "keyring>=25.5.0",
+    "requests>=2.31.0",
+    "typer>=0.13.1",
+]
+
+[project.scripts]
+tasknode = "tasknode.cli:app"
