@@ -80,12 +80,16 @@ def submit(
         ]
     )
 
-    # get the results of running pip freeze
+    # get the results of running pip freeze and filter out tasknode packages
     result = subprocess.run(["pip", "freeze"], capture_output=True, text=True)
+    requirements = [
+        line for line in result.stdout.splitlines() 
+        if not 'tasknode' in line.lower()
+    ]
 
-    # write the results to a file called requirements.txt
+    # write the filtered results to a file called requirements.txt
     with open("tasknode_deploy/requirements-tasknode.txt", "w") as f:
-        f.write(result.stdout)
+        f.write("\n".join(requirements))
 
     # find out which version of python is being used
     python_version = subprocess.run(
