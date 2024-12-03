@@ -14,12 +14,19 @@ SERVICE_NAME = "tasknode-cli"
 
 def show_available_commands(ctx: typer.Context, value: bool):
     if value:
-        typer.echo("\nAvailable commands:")
-        typer.echo("  submit    Submit a Python script to be run in the cloud")
-        typer.echo("  help      Show help for the TaskNode CLI")
-        typer.echo("  signup    Sign up for a TaskNode account")
-        typer.echo("  login     Log in to your TaskNode account")
-        typer.echo("  logout    Log out of your TaskNode account")
+        typer.echo("\n📋 Available Commands\n")
+        
+        typer.echo("🔑 Account Management:")
+        typer.echo("  • signup     Sign up for a TaskNode account")
+        typer.echo("  • login      Log in to your TaskNode account")
+        typer.echo("  • logout     Log out of your TaskNode account")
+        
+        typer.echo("\n🚀 Core Functions:")
+        typer.echo("  • submit     Submit a Python script to be run in the cloud")
+        
+        typer.echo("\nℹ️  Help:")
+        typer.echo("  • help       Show help for the TaskNode CLI")
+        typer.echo("")  # Add a newline
         raise typer.Exit()
 
 
@@ -261,82 +268,6 @@ def get_valid_token() -> str:
         raise typer.Exit(1)
         
     return access_token
-
-
-@app.command()
-def signup(
-    email: str = typer.Option(..., prompt=True),
-    password: str = typer.Option(..., prompt=True, hide_input=True, confirmation_prompt=True),
-):
-    """
-    Sign up for a TaskNode account.
-    """
-    try:
-        # Initial signup request
-        response = requests.post(
-            f"{API_URL}/api/v1/users/signup",
-            json={"email": email, "password": password},
-        )
-
-        if response.status_code != 200:
-            error_data = response.json()
-            if "detail" in error_data:
-                typer.echo(f"Signup failed: {error_data['detail']}", err=True)
-                raise typer.Exit(1)
-
-        response_data = response.json()
-        typer.echo(response_data["message"])
-        
-        # Prompt for verification code
-        verification_code = typer.prompt("\nPlease enter the verification code sent to your email")
-        
-        # Verify the email
-        verify_response = requests.post(
-            f"{API_URL}/api/v1/users/verify",
-            json={"email": email, "verification_code": verification_code},
-        )
-
-        if verify_response.status_code != 200:
-            error_data = verify_response.json()
-            if "detail" in error_data:
-                typer.echo(f"Verification failed: {error_data['detail']}", err=True)
-                typer.echo("\nYou can try verifying again later using 'tasknode verify'")
-                raise typer.Exit(1)
-
-        typer.echo("\n✅ Email verified successfully!")
-        typer.echo("You can now log in using 'tasknode login'")
-
-    except requests.exceptions.RequestException as e:
-        typer.echo(f"Signup failed: {str(e)}", err=True)
-        raise typer.Exit(1)
-
-
-@app.command()
-def verify(
-    email: str = typer.Option(..., prompt=True),
-    verification_code: str = typer.Option(..., prompt=True),
-):
-    """
-    Verify your email with a verification code.
-    """
-    try:
-        response = requests.post(
-            f"{API_URL}/api/v1/users/verify",
-            json={"email": email, "verification_code": verification_code},
-        )
-
-        if response.status_code != 200:
-            error_data = response.json()
-            if "detail" in error_data:
-                typer.echo(f"Verification failed: {error_data['detail']}", err=True)
-                raise typer.Exit(1)
-
-        typer.echo("\n✅ Email verified successfully!")
-        typer.echo("You can now log in using 'tasknode login'")
-
-    except requests.exceptions.RequestException as e:
-        typer.echo(f"Verification failed: {str(e)}", err=True)
-        raise typer.Exit(1)
 
 
 if __name__ == "__main__":
