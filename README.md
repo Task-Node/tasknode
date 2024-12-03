@@ -10,25 +10,30 @@ A powerful command-line tool that lets you run Python scripts in the cloud with 
 - **Dependency Management**: Automatic detection and packaging of project dependencies
 - **Cross-Platform**: Works on Linux, macOS, and Windows
 
-## 🔧 Installation
+## 🚀 Get started in 3 minutes
+
+First, install TaskNode:
 
 ```bash
 pip install tasknode
 ```
 
-For the latest development version:
+Optionally, generate a script to run:
 
 ```bash
-git clone https://github.com/tasknode/tasknode-cli.git
-cd tasknode-cli
-pip install -e .
+cat << 'EOF' > script.py
+with open("outputs.txt", "w") as file:
+    for number in range(1, 11):
+        file.write(f"{number}\n")
+print("Numbers 1-10 have been written to outputs.txt")
+EOF
 ```
 
-## 🚀 Quick Start
+Then, submit a script to run in the cloud:
 
 ```bash
-# Submit a script to run in the cloud
 tasknode submit script.py
+```
 
 # Get help and see all commands
 tasknode help
