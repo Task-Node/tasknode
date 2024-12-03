@@ -42,7 +42,9 @@ Then, submit a script to run in the cloud:
 tasknode submit script.py
 ```
 
-# Get help and see all commands
+## Get help and see all commands
+
+```bash
 tasknode help
 ```
 
