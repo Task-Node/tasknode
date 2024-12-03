@@ -2,7 +2,7 @@
 
 > **Note**: TaskNode is currently in beta. While fully functional, you may encounter occasional issues. Please report any bugs on our GitHub issues page.
 
-Do you ever?
+Do you ever:
 
 - Keep your computer on all night just to run a script?
 - Run scripts that would benefit from a much faster internet connection?
