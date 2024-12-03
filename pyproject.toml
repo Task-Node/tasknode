@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "tasknode"
 version = "0.0.0"
 authors = [
-    { name = "Daniel Newman", email = "daniel@tasknode.xyz" },
+    { name = "Daniel Newman", email = "daniel@tasknode.dev" },
 ]
 description = "TaskNode CLI tool for running Python scripts in the cloud"
 readme = "README.md"

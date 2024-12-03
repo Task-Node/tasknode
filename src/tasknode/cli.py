@@ -10,7 +10,7 @@ import click
 
 app = typer.Typer(no_args_is_help=True)
 
-API_URL = "https://api-dev.tasknode.xyz"  # Backend API URL
+API_URL = "https://api-dev.tasknode.dev"  # Backend API URL
 SERVICE_NAME = "tasknode-cli"
 
 def show_available_commands(ctx: typer.Context, value: bool):
