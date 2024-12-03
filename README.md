@@ -2,13 +2,20 @@
 
 > **Note**: TaskNode is currently in beta. While fully functional, you may encounter occasional issues. Please report any bugs on our GitHub issues page.
 
-A powerful command-line tool that lets you run Python scripts in the cloud with zero infrastructure setup.
+Do you ever?
+
+- Keep your computer on all night just to run a script?
+- Run scripts that would benefit from a much faster internet connection?
+- Have too many scripts running at a time?
+
+TaskNode is a powerful command-line tool that lets you run Python scripts asynchronously in the cloud with zero infrastructure setup. Submit a task, and we'll handle the rest.
 
 ## ✨ Features
 
 - **Zero Configuration**: Just install and run - we handle all the cloud setup
 - **Dependency Management**: Automatic detection and packaging of project dependencies
 - **Cross-Platform**: Works on Linux, macOS, and Windows
+- **Notifications**: Get an email when your task is complete
 
 ## 🚀 Get started in 3 minutes
 
