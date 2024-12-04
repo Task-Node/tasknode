@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "tasknode"
-version = "0.0.9"
+version = "0.0.10"
 authors = [
     { name = "Daniel Newman", email = "daniel@tasknode.dev" },
 ]
