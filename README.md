@@ -60,3 +60,25 @@ When you submit a script, TaskNode automatically:
 - 📝 Captures dependencies in requirements-tasknode.txt
 - ℹ️ Records Python version and system information
 - 🔒 Securely uploads everything to our cloud infrastructure
+
+
+## FAQ
+
+### How does TaskNode handle my files?
+
+TaskNode securely uploads your files to our cloud infrastructure and deletes them after your task is complete. If the task fails, the files are retained for 24 hours in case you need to re-run the task.
+
+Any outputs generated are retained for up to 72 hours, during which time you can download them.
+
+### How does TaskNode handle my dependencies?
+
+TaskNode automatically detects your dependencies and packages them in a separate file called `requirements-tasknode.txt`. This file is uploaded to our cloud infrastructure and installed when your task is run.
+
+### How does TaskNode handle my Python version?
+
+Right now, TaskNode only supports Python 3.12. We're working on adding support for other Python versions.
+
+
+### Where is the data processed?
+
+All data is processed in the AWS US East (N. Virginia) region.

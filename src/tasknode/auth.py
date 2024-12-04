@@ -229,7 +229,18 @@ def signup(
         )
         verify_response.raise_for_status()
 
-        typer.echo("\n✅ Email verified successfully! You can now login with command 'tasknode login'")
+        typer.echo("\n✅ Email verified successfully!\n")
+
+        # Automatically log in the user
+        login_response = requests.post(
+            f"{API_URL}/api/v1/users/login",
+            json={"email": email, "password": password},
+        )
+        login_response.raise_for_status()
+        
+        tokens = login_response.json()
+        store_tokens(tokens)
+        typer.echo("Successfully logged in! 🎉")
 
     except requests.exceptions.RequestException as e:
         error_msg = str(e)
