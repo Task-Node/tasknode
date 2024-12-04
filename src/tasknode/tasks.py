@@ -224,8 +224,15 @@ def list_jobs():
 
             # Create and configure the table
             num_jobs = len(jobs_data["jobs"])
+            total_job_count = jobs_data["total_count"]
             end_index = offset + num_jobs
-            table = Table(title=f"Your TaskNode jobs ({offset + 1} - {end_index})")
+            
+            # Only show count details if there are more jobs than currently displayed
+            title = "Your TaskNode jobs"
+            if total_job_count > limit:
+                title += f" ({offset + 1} - {end_index} of {total_job_count})"
+            
+            table = Table(title=title)
             table.add_column("Job ID", style="cyan")
             table.add_column("Status", style="magenta")
             table.add_column("Created At", style="green")
@@ -250,10 +257,10 @@ def list_jobs():
             print("")
             print(table)
 
-            # If we got exactly 10 jobs, there might be more
-            if len(jobs_data["jobs"]) == limit:
+            # If there are more jobs available
+            if end_index < total_job_count:
                 should_continue = typer.confirm(
-                    "\nThere might be more jobs. Would you like to see the next page?"
+                    f"\nShowing {end_index} of {total_job_count} jobs. Would you like to see the next page?"
                 )
                 if should_continue:
                     offset += limit
