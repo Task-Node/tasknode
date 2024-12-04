@@ -1,4 +1,6 @@
-import keyring
+import os
+import json
+from pathlib import Path
 import jwt
 import requests
 import typer
@@ -36,12 +38,7 @@ def login(
                 raise typer.Exit(1)
 
         tokens = response.json()
-
-        # Store tokens securely
-        keyring.set_password(SERVICE_NAME, "access_token", tokens["access_token"])
-        keyring.set_password(SERVICE_NAME, "id_token", tokens["id_token"])
-        keyring.set_password(SERVICE_NAME, "refresh_token", tokens["refresh_token"])
-
+        store_tokens(tokens)
         typer.echo("Successfully logged in! 🎉")
 
     except requests.exceptions.RequestException as e:
@@ -53,13 +50,8 @@ def logout():
     """
     Log out of your TaskNode account.
     """
-    try:
-        keyring.delete_password(SERVICE_NAME, "access_token")
-        keyring.delete_password(SERVICE_NAME, "id_token")
-        keyring.delete_password(SERVICE_NAME, "refresh_token")
-        typer.echo("Successfully logged out!")
-    except keyring.errors.PasswordDeleteError:
-        typer.echo("Already logged out!")
+    clear_tokens()
+    typer.echo("Successfully logged out!")
 
 
 def resend_verification(email: str = typer.Option(..., prompt=True)):
@@ -139,7 +131,7 @@ def whoami():
     Show information about the currently logged in user.
     """
     try:
-        id_token = keyring.get_password(SERVICE_NAME, "id_token")
+        id_token = get_tokens().get("id_token")
         if not id_token:
             typer.echo(
                 "Not logged in. Please login using 'tasknode login' or sign up using 'tasknode signup'.",
@@ -154,9 +146,6 @@ def whoami():
             typer.echo(f"Error decoding token: {str(e)}", err=True)
             raise typer.Exit(1)
 
-    except keyring.errors.KeyringError as e:
-        typer.echo(f"Error accessing keyring: {str(e)}", err=True)
-        raise typer.Exit(1)
     except Exception as e:
         typer.echo(
             "Not logged in. Please login using 'tasknode login' or sign up using 'tasknode signup'.",
@@ -172,7 +161,8 @@ def refresh_tokens() -> Optional[str]:
     Returns the new access token if successful, None otherwise.
     """
     try:
-        refresh_token = keyring.get_password(SERVICE_NAME, "refresh_token")
+        tokens = get_tokens()
+        refresh_token = tokens.get("refresh_token")
         if not refresh_token:
             return None
 
@@ -181,18 +171,15 @@ def refresh_tokens() -> Optional[str]:
             params={"refresh_token": refresh_token},
         )
         response.raise_for_status()
-        tokens = response.json()
+        new_tokens = response.json()
+        
+        # Update stored tokens
+        tokens.update(new_tokens)
+        store_tokens(tokens)
 
-        # Store new tokens
-        keyring.set_password(SERVICE_NAME, "access_token", tokens["access_token"])
-        keyring.set_password(SERVICE_NAME, "id_token", tokens["id_token"])
-
-        return tokens["access_token"]
+        return new_tokens["access_token"]
     except requests.exceptions.RequestException as e:
         typer.echo(f"Token refresh failed: {str(e)}", err=True)
-        return None
-    except keyring.errors.KeyringError as e:
-        typer.echo(f"Keyring error: {str(e)}", err=True)
         return None
 
 
@@ -200,7 +187,9 @@ def get_valid_token() -> str:
     """
     Get a valid access token or raise an error if not possible.
     """
-    access_token = keyring.get_password(SERVICE_NAME, "access_token")
+    tokens = get_tokens()
+    access_token = tokens.get("access_token")
+    
     if not access_token:
         typer.echo(
             "Please login first using 'tasknode login' or sign up using 'tasknode signup'.",
@@ -215,9 +204,11 @@ def get_valid_token() -> str:
     )
 
     if response.status_code == 401:  # Unauthorized - token might be expired
-        new_token = refresh_tokens()
-        if new_token:
-            return new_token
+        refresh_token = tokens.get("refresh_token")
+        if refresh_token:
+            new_token = refresh_tokens()
+            if new_token:
+                return new_token
         typer.echo(
             "Session expired. Please login again using 'tasknode login'.", err=True
         )
@@ -273,3 +264,35 @@ def signup(
                 pass
         typer.echo(f"\n❌ Signup failed: {error_msg}", err=True)
         raise typer.Exit(1)
+
+
+def get_config_dir() -> Path:
+    """Get the TaskNode config directory."""
+    config_dir = Path.home() / ".tasknode"
+    config_dir.mkdir(exist_ok=True)
+    return config_dir
+
+def store_tokens(tokens: dict):
+    """Store tokens in config file."""
+    config_file = get_config_dir() / "credentials.json"
+    with open(config_file, "w") as f:
+        json.dump(tokens, f)
+    # Secure the file permissions (readable only by user)
+    os.chmod(config_file, 0o600)
+
+def get_tokens() -> dict:
+    """Get stored tokens."""
+    config_file = get_config_dir() / "credentials.json"
+    try:
+        with open(config_file) as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+
+def clear_tokens():
+    """Remove stored tokens."""
+    config_file = get_config_dir() / "credentials.json"
+    try:
+        os.remove(config_file)
+    except FileNotFoundError:
+        pass

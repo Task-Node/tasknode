@@ -2,7 +2,6 @@ import json
 import os
 import subprocess
 import typer
-import keyring
 import requests
 from rich import print
 from rich.table import Table
@@ -27,7 +26,7 @@ def submit(
     try:
         access_token = get_valid_token()
         print(" done")
-    except keyring.errors.KeyringError as e:
+    except Exception as e:
         print(" error")
         typer.echo(f"Authentication error: {str(e)}", err=True)
         raise typer.Exit(1)
@@ -209,7 +208,7 @@ def list_jobs(offset: int = 0):
     try:
         access_token = get_valid_token()
         print(" done")
-    except keyring.errors.KeyringError as e:
+    except Exception as e:
         print(" error")
         typer.echo(f"Authentication error: {str(e)}", err=True)
         raise typer.Exit(1)

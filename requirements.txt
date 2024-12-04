@@ -1,4 +1,3 @@
 pyjwt==2.10.1
-keyring==25.5.0
 requests==2.32.0
 typer==0.13.1
