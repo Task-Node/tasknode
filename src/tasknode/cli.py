@@ -34,9 +34,7 @@ def show_available_commands(ctx: typer.Context, value: bool = True):
 @app.callback()
 def callback(
     ctx: typer.Context,
-    help: bool = typer.Option(
-        None, "--help", "-h", is_eager=True, callback=show_available_commands
-    ),
+    help: bool = typer.Option(None, "--help", "-h", is_eager=True, callback=show_available_commands),
 ):
     """
     TaskNode CLI - Run your Python scripts in the cloud
@@ -66,9 +64,7 @@ def login(
 @app.command()
 def signup(
     email: str = typer.Option(..., prompt=True),
-    password: str = typer.Option(
-        ..., prompt=True, hide_input=True, confirmation_prompt=True
-    ),
+    password: str = typer.Option(..., prompt=True, hide_input=True, confirmation_prompt=True),
 ):
     """
     Sign up for a TaskNode account.
@@ -126,9 +122,7 @@ def submit(
 
 
 @app.command()
-def list_jobs(
-    offset: int = typer.Option(0, "--offset", "-o", help="Number of jobs to skip")
-):
+def list_jobs(offset: int = typer.Option(0, "--offset", "-o", help="Number of jobs to skip")):
     """
     List your TaskNode jobs and their statuses.
     """

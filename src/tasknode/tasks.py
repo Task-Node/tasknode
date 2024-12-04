@@ -102,9 +102,7 @@ def submit(
 
     # get a list of installed packages
     requirements = [
-        f"{dist.key}=={dist.version}"
-        for dist in pkg_resources.working_set
-        if "tasknode" not in dist.key.lower()
+        f"{dist.key}=={dist.version}" for dist in pkg_resources.working_set if "tasknode" not in dist.key.lower()
     ]
 
     # write the filtered results to a file called requirements.txt
@@ -137,9 +135,7 @@ def submit(
     create_zip("tasknode_deploy", "tasknode_deploy.zip")
 
     # Get zip file size using Python's os.path.getsize()
-    zipped_mb = os.path.getsize("tasknode_deploy.zip") / (
-        1024 * 1024
-    )  # Convert bytes to MB
+    zipped_mb = os.path.getsize("tasknode_deploy.zip") / (1024 * 1024)  # Convert bytes to MB
 
     print("")
     print(f"Deployment size unzipped: {unzipped_mb:.2f} MB")
@@ -238,12 +234,8 @@ def list_jobs(offset: int = 0):
 
         # Add rows to the table
         for job in jobs_data["jobs"]:
-            created_dt = datetime.fromisoformat(job["created_at"]).replace(
-                tzinfo=ZoneInfo("UTC")
-            )
-            updated_dt = datetime.fromisoformat(job["updated_at"]).replace(
-                tzinfo=ZoneInfo("UTC")
-            )
+            created_dt = datetime.fromisoformat(job["created_at"]).replace(tzinfo=ZoneInfo("UTC"))
+            updated_dt = datetime.fromisoformat(job["updated_at"]).replace(tzinfo=ZoneInfo("UTC"))
 
             created_at = created_dt.astimezone().strftime("%Y-%m-%d %H:%M:%S%z")
             updated_at = updated_dt.astimezone().strftime("%Y-%m-%d %H:%M:%S%z")
@@ -257,9 +249,7 @@ def list_jobs(offset: int = 0):
         # If there are more jobs available, show the command to see the next page
         if end_index < total_job_count:
             next_offset = offset + limit
-            print(
-                f"To see the next page, run: `tasknode list-jobs --offset {next_offset}`"
-            )
+            print(f"To see the next page, run: `tasknode list-jobs --offset {next_offset}`")
 
     except requests.exceptions.RequestException as e:
         typer.echo(f"Failed to fetch jobs: {str(e)}", err=True)

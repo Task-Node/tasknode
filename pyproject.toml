@@ -19,3 +19,6 @@ dependencies = [
 
 [project.scripts]
 tasknode = "tasknode.cli:app"
+
+[tool.black]
+line-length = 120

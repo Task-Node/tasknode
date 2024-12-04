@@ -59,16 +59,12 @@ def resend_verification(email: str = typer.Option(..., prompt=True)):
     Resend the email verification code to your email address.
     """
     try:
-        response = requests.post(
-            f"{API_URL}/api/v1/users/resend-verification", json={"email": email}
-        )
+        response = requests.post(f"{API_URL}/api/v1/users/resend-verification", json={"email": email})
         response.raise_for_status()
         typer.echo("\n✉️  A new verification code has been sent to your email.")
 
         # Prompt for verification code
-        verification_code = typer.prompt(
-            "\nEnter the verification code from your email"
-        )
+        verification_code = typer.prompt("\nEnter the verification code from your email")
 
         # Submit the verification code - Changed endpoint from verify-email to verify
         verify_response = requests.post(
@@ -76,9 +72,7 @@ def resend_verification(email: str = typer.Option(..., prompt=True)):
             json={"email": email, "verification_code": verification_code},
         )
         verify_response.raise_for_status()
-        typer.echo(
-            "\n✅ Email verified successfully! You can now login with command 'tasknode login'"
-        )
+        typer.echo("\n✅ Email verified successfully! You can now login with command 'tasknode login'")
 
     except requests.exceptions.RequestException as e:
         typer.echo(f"\n❌ Verification failed: {str(e)}", err=True)
@@ -93,19 +87,13 @@ def reset_password(
     """
     try:
         # Request password reset code
-        response = requests.post(
-            f"{API_URL}/api/v1/users/forgot-password", json={"email": email}
-        )
+        response = requests.post(f"{API_URL}/api/v1/users/forgot-password", json={"email": email})
         response.raise_for_status()
         typer.echo("\n✉️  A password reset code has been sent to your email.")
 
         # Prompt for verification code and new password
-        confirmation_code = typer.prompt(
-            "\nEnter the verification code from your email"
-        )
-        new_password = typer.prompt(
-            "Enter your new password", hide_input=True, confirmation_prompt=True
-        )
+        confirmation_code = typer.prompt("\nEnter the verification code from your email")
+        new_password = typer.prompt("Enter your new password", hide_input=True, confirmation_prompt=True)
 
         # Confirm password reset
         response = requests.post(
@@ -117,9 +105,7 @@ def reset_password(
             },
         )
         response.raise_for_status()
-        typer.echo(
-            "\n✅ Password reset successfully! You can now login with your new password."
-        )
+        typer.echo("\n✅ Password reset successfully! You can now login with your new password.")
 
     except requests.exceptions.RequestException as e:
         typer.echo(f"\n❌ Password reset failed: {str(e)}", err=True)
@@ -209,9 +195,7 @@ def get_valid_token() -> str:
             new_token = refresh_tokens()
             if new_token:
                 return new_token
-        typer.echo(
-            "Session expired. Please login again using 'tasknode login'.", err=True
-        )
+        typer.echo("Session expired. Please login again using 'tasknode login'.", err=True)
         raise typer.Exit(1)
 
     return access_token
@@ -219,9 +203,7 @@ def get_valid_token() -> str:
 
 def signup(
     email: str = typer.Option(..., prompt=True),
-    password: str = typer.Option(
-        ..., prompt=True, hide_input=True, confirmation_prompt=True
-    ),
+    password: str = typer.Option(..., prompt=True, hide_input=True, confirmation_prompt=True),
 ):
     """
     Sign up for a TaskNode account.
@@ -238,9 +220,7 @@ def signup(
         typer.echo("\n✉️  A verification code has been sent to your email.")
 
         # Prompt for verification code
-        verification_code = typer.prompt(
-            "\nEnter the verification code from your email"
-        )
+        verification_code = typer.prompt("\nEnter the verification code from your email")
 
         # Submit the verification code
         verify_response = requests.post(
@@ -249,9 +229,7 @@ def signup(
         )
         verify_response.raise_for_status()
 
-        typer.echo(
-            "\n✅ Email verified successfully! You can now login with command 'tasknode login'"
-        )
+        typer.echo("\n✅ Email verified successfully! You can now login with command 'tasknode login'")
 
     except requests.exceptions.RequestException as e:
         error_msg = str(e)
