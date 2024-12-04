@@ -17,7 +17,7 @@ TaskNode is a powerful command-line tool that lets you run Python scripts asynch
 - **Cross-Platform**: Works on Linux, macOS, and Windows
 - **Notifications**: Get an email when your task is complete
 
-## 🚀 Get started in 60 seconds
+## 🚀 Get started in 2 minutes
 
 First, install TaskNode:
 
