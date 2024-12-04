@@ -172,7 +172,7 @@ def refresh_tokens() -> Optional[str]:
         )
         response.raise_for_status()
         new_tokens = response.json()
-        
+
         # Update stored tokens
         tokens.update(new_tokens)
         store_tokens(tokens)
@@ -189,7 +189,7 @@ def get_valid_token() -> str:
     """
     tokens = get_tokens()
     access_token = tokens.get("access_token")
-    
+
     if not access_token:
         typer.echo(
             "Please login first using 'tasknode login' or sign up using 'tasknode signup'.",
@@ -272,6 +272,7 @@ def get_config_dir() -> Path:
     config_dir.mkdir(exist_ok=True)
     return config_dir
 
+
 def store_tokens(tokens: dict):
     """Store tokens in config file."""
     config_file = get_config_dir() / "credentials.json"
@@ -290,6 +291,7 @@ def get_tokens() -> dict:
             return json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
         return {}
+
 
 def clear_tokens():
     """Remove stored tokens."""

@@ -80,20 +80,20 @@ def submit(
 
     print("Copying files... ", end="", flush=True)
     try:
-        for root, dirs, files in os.walk('.', topdown=True):
+        for root, dirs, files in os.walk(".", topdown=True):
             # Skip excluded directories
             dirs[:] = [d for d in dirs if d not in exclude_patterns]
-            
+
             for file in files:
                 src_path = os.path.join(root, file)
                 if should_copy(src_path, exclude_patterns):
                     # Convert source path to relative path
-                    rel_path = os.path.relpath(src_path, '.')
-                    dst_path = os.path.join('tasknode_deploy', rel_path)
-                    
+                    rel_path = os.path.relpath(src_path, ".")
+                    dst_path = os.path.join("tasknode_deploy", rel_path)
+
                     # Create destination directory if it doesn't exist
                     os.makedirs(os.path.dirname(dst_path), exist_ok=True)
-                    
+
                     # Copy the file
                     shutil.copy2(src_path, dst_path)
     except Exception as e:
@@ -137,7 +137,9 @@ def submit(
     create_zip("tasknode_deploy", "tasknode_deploy.zip")
 
     # Get zip file size using Python's os.path.getsize()
-    zipped_mb = os.path.getsize("tasknode_deploy.zip") / (1024 * 1024)  # Convert bytes to MB
+    zipped_mb = os.path.getsize("tasknode_deploy.zip") / (
+        1024 * 1024
+    )  # Convert bytes to MB
 
     print("")
     print(f"Deployment size unzipped: {unzipped_mb:.2f} MB")
@@ -180,9 +182,7 @@ def submit(
             if os.path.exists("tasknode_deploy.zip"):
                 os.remove("tasknode_deploy.zip")
         except Exception as e:
-            typer.echo(
-                f"Warning: Error during cleanup: {str(e)}", err=True
-            )
+            typer.echo(f"Warning: Error during cleanup: {str(e)}", err=True)
 
 
 def should_copy(path, exclude_patterns):
@@ -192,7 +192,8 @@ def should_copy(path, exclude_patterns):
     parts = path.split(os.sep)
     if any(part in exclude_patterns for part in parts):
         return False
-    return not path.endswith(('.pyc', '.pyo', '.pyd', '.egg-info'))
+    return not path.endswith((".pyc", ".pyo", ".pyd", ".egg-info"))
+
 
 def list_jobs(offset: int = 0):
     """
@@ -264,6 +265,7 @@ def list_jobs(offset: int = 0):
         typer.echo(f"Failed to fetch jobs: {str(e)}", err=True)
         raise typer.Exit(1)
 
+
 def get_folder_size(path):
     total_size = 0
     for dirpath, dirnames, filenames in os.walk(path):
@@ -272,8 +274,9 @@ def get_folder_size(path):
             total_size += os.path.getsize(filepath)
     return total_size / (1024 * 1024)  # Convert to MB
 
+
 def create_zip(source_path, output_path):
-    with zipfile.ZipFile(output_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+    with zipfile.ZipFile(output_path, "w", zipfile.ZIP_DEFLATED) as zipf:
         for root, dirs, files in os.walk(source_path):
             for file in files:
                 file_path = os.path.join(root, file)
