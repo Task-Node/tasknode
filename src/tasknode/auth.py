@@ -224,3 +224,52 @@ def get_valid_token() -> str:
         raise typer.Exit(1)
 
     return access_token
+
+
+def signup(
+    email: str = typer.Option(..., prompt=True),
+    password: str = typer.Option(
+        ..., prompt=True, hide_input=True, confirmation_prompt=True
+    ),
+):
+    """
+    Sign up for a TaskNode account.
+    """
+    try:
+        # Submit signup request
+        response = requests.post(
+            f"{API_URL}/api/v1/users/signup",
+            json={"email": email, "password": password},
+        )
+        response.raise_for_status()
+
+        typer.echo("\n✅ Account created successfully!")
+        typer.echo("\n✉️  A verification code has been sent to your email.")
+
+        # Prompt for verification code
+        verification_code = typer.prompt(
+            "\nEnter the verification code from your email"
+        )
+
+        # Submit the verification code
+        verify_response = requests.post(
+            f"{API_URL}/api/v1/users/verify",
+            json={"email": email, "verification_code": verification_code},
+        )
+        verify_response.raise_for_status()
+
+        typer.echo(
+            "\n✅ Email verified successfully! You can now login with command 'tasknode login'"
+        )
+
+    except requests.exceptions.RequestException as e:
+        error_msg = str(e)
+        if hasattr(e, "response") and e.response is not None:
+            try:
+                error_data = e.response.json()
+                if "detail" in error_data:
+                    error_msg = error_data["detail"]
+            except:
+                pass
+        typer.echo(f"\n❌ Signup failed: {error_msg}", err=True)
+        raise typer.Exit(1)

@@ -38,7 +38,7 @@ def submit(
         raise typer.Exit(1)
 
     file_extension = os.path.splitext(script)[1].lower()
-    if file_extension not in ['.py', '.ipynb']:
+    if file_extension not in [".py", ".ipynb"]:
         typer.echo("Error: Only .py and .ipynb files are supported", err=True)
         raise typer.Exit(1)
 
@@ -229,12 +229,12 @@ def list_jobs(offset: int = 0):
         num_jobs = len(jobs_data["jobs"])
         total_job_count = jobs_data["total_count"]
         end_index = offset + num_jobs
-        
+
         # Only show count details if there are more jobs than currently displayed
         title = "Your TaskNode jobs"
         if total_job_count > limit:
             title += f" ({offset + 1} - {end_index} of {total_job_count})"
-        
+
         table = Table(title=title)
         table.add_column("Job ID", style="cyan")
         table.add_column("Status", style="magenta")
@@ -262,7 +262,9 @@ def list_jobs(offset: int = 0):
         # If there are more jobs available, show the command to see the next page
         if end_index < total_job_count:
             next_offset = offset + limit
-            print(f"To see the next page, run: `tasknode list-jobs --offset {next_offset}`")
+            print(
+                f"To see the next page, run: `tasknode list-jobs --offset {next_offset}`"
+            )
 
     except requests.exceptions.RequestException as e:
         typer.echo(f"Failed to fetch jobs: {str(e)}", err=True)

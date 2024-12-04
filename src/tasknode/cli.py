@@ -6,7 +6,7 @@ import tasknode.tasks as tasks
 app = typer.Typer(no_args_is_help=True)
 
 
-def show_available_commands(ctx: typer.Context, value: bool):
+def show_available_commands(ctx: typer.Context, value: bool = True):
     if value:
         # fmt: off
         typer.echo("\n📋 Available Commands\n")
@@ -15,12 +15,12 @@ def show_available_commands(ctx: typer.Context, value: bool):
         typer.echo("  • signup                   Sign up for a TaskNode account")
         typer.echo("  • login                    Log in to your TaskNode account")
         typer.echo("  • logout                   Log out of your TaskNode account")
-        typer.echo("  • resend-verification      Resend the email verification code to your email address")
+        typer.echo("  • resend-verification      Resend the email verification code")
         typer.echo("  • reset-password           Reset your account password")
-        typer.echo("  • whoami                   Show information about the currently logged in user")
+        typer.echo("  • whoami                   Show current user information")
 
-        typer.echo("\n🚀 Core Functions:")
-        typer.echo("  • submit                   Submit a Python script to be run in the cloud")
+        typer.echo("\n🚀 Task Management:")
+        typer.echo("  • submit                   Submit a Python script to run")
         typer.echo("  • list-jobs                List your TaskNode jobs")
 
         typer.echo("\nℹ️  Help:")
@@ -61,6 +61,19 @@ def login(
     Log in to your TaskNode account.
     """
     return auth.login(email, password)
+
+
+@app.command()
+def signup(
+    email: str = typer.Option(..., prompt=True),
+    password: str = typer.Option(
+        ..., prompt=True, hide_input=True, confirmation_prompt=True
+    ),
+):
+    """
+    Sign up for a TaskNode account.
+    """
+    return auth.signup(email, password)
 
 
 @app.command()
