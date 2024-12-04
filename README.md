@@ -42,6 +42,10 @@ Then, submit a script to run in the cloud:
 tasknode submit script.py
 ```
 
+## Jupyter notebooks
+
+TaskNode also supports Jupyter notebooks. Just submit your notebook (e.g., `tasknode submit notebook.ipynb`), and we'll convert it to a Python script and run it for you.
+
 ## Get help and see all commands
 
 ```bash
