@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "tasknode"
-version = "0.0.11"
+version = "0.0.12"
 authors = [
     { name = "Daniel Newman", email = "daniel@tasknode.dev" },
 ]
@@ -12,8 +12,8 @@ description = "TaskNode CLI tool for running Python scripts in the cloud"
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
-    "pyjwt>=2.10.1",
-    "requests>=2.32.3",
+    "pyjwt>=2.10.0",
+    "requests>=2.32.0",
     "typer>=0.13.1",
 ]
 

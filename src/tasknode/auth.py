@@ -277,8 +277,10 @@ def store_tokens(tokens: dict):
     config_file = get_config_dir() / "credentials.json"
     with open(config_file, "w") as f:
         json.dump(tokens, f)
-    # Secure the file permissions (readable only by user)
-    os.chmod(config_file, 0o600)
+    # Windows doesn't support os.chmod(file, 0o600)
+    if os.name != "nt":  # If not Windows
+        os.chmod(config_file, 0o600)  # Set permissions to 600 (readable only by user)
+
 
 def get_tokens() -> dict:
     """Get stored tokens."""

@@ -42,57 +42,83 @@ def submit(
         raise typer.Exit(1)
 
     # delete the tasknode_deploy folder if it already exists
-    result = subprocess.run(
-        ["rm", "-rf", "tasknode_deploy"], capture_output=True, text=True
-    )
-    if result.returncode != 0:
-        typer.echo(f"Error removing existing deploy folder: {result.stderr}", err=True)
-        raise typer.Exit(1)
+    if os.path.exists("tasknode_deploy"):
+        if os.name == "nt":  # Windows
+            result = subprocess.run(
+                ["rmdir", "/s", "/q", "tasknode_deploy"], capture_output=True, text=True
+            )
+        else:  # Unix/Linux/Mac
+            result = subprocess.run(
+                ["rm", "-rf", "tasknode_deploy"], capture_output=True, text=True
+            )
+        if result.returncode != 0:
+            typer.echo(f"Error removing existing deploy folder: {result.stderr}", err=True)
+            raise typer.Exit(1)
 
     # create a new folder called tasknode_deploy
     print("Creating deploy folder... ", end="", flush=True)
-    result = subprocess.run(
-        ["mkdir", "tasknode_deploy"], capture_output=True, text=True
-    )
-    if result.returncode != 0:
-        typer.echo(f"Error creating deploy folder: {result.stderr}", err=True)
-        raise typer.Exit(1)
+    os.makedirs("tasknode_deploy", exist_ok=True)
 
-    # remove the tasknode_deploy folder if it already exists
-    result = subprocess.run(
-        ["rm", "-rf", "tasknode_deploy"], capture_output=True, text=True
-    )
-    if result.returncode != 0:
-        typer.echo(f"Error removing existing deploy folder: {result.stderr}", err=True)
-        raise typer.Exit(1)
+    # Copy everything in the current directory into tasknode_deploy folder
+    if os.name == "nt":  # Windows
+        # Create temporary exclude file for Windows
+        exclude_patterns = [
+            ".git",
+            "node_modules",
+            "tasknode_deploy",
+            "__pycache__",
+            "*.pyc",
+            "*.pyo",
+            "*.pyd",
+            ".env",
+            "venv",
+            ".venv",
+            ".idea",
+            ".vscode",
+            "*.egg-info",
+            "dist",
+            "build",
+            "tasknode_deploy.zip",
+        ]
+        with open("exclude.txt", "w") as f:
+            for pattern in exclude_patterns:
+                f.write(pattern + "\n")
 
-    # Copy everything in the current directory into tasknode_deploy folder, excluding specific directories
-    result = subprocess.run(
-        [
-            "rsync",
-            "-av",
-            "--exclude=.git",
-            "--exclude=node_modules",
-            "--exclude=tasknode_deploy",
-            "--exclude=__pycache__",
-            "--exclude=*.pyc",
-            "--exclude=*.pyo",
-            "--exclude=*.pyd",
-            "--exclude=.env",
-            "--exclude=venv",
-            "--exclude=.venv",
-            "--exclude=.idea",
-            "--exclude=.vscode",
-            "--exclude=*.egg-info",
-            "--exclude=dist",
-            "--exclude=build",
-            "--exclude=tasknode_deploy.zip",
-            "./",
-            "tasknode_deploy/",
-        ],
-        capture_output=True,
-        text=True,
-    )
+        result = subprocess.run(
+            ["xcopy", ".", "tasknode_deploy", "/E", "/I", "/Y", "/EXCLUDE:exclude.txt"],
+            capture_output=True,
+            text=True,
+        )
+
+        # Clean up temporary exclude file
+        os.remove("exclude.txt")
+    else:  # Unix/Linux/Mac
+        result = subprocess.run(
+            [
+                "rsync",
+                "-av",
+                "--exclude=.git",
+                "--exclude=node_modules",
+                "--exclude=tasknode_deploy",
+                "--exclude=__pycache__",
+                "--exclude=*.pyc",
+                "--exclude=*.pyo",
+                "--exclude=*.pyd",
+                "--exclude=.env",
+                "--exclude=venv",
+                "--exclude=.venv",
+                "--exclude=.idea",
+                "--exclude=.vscode",
+                "--exclude=*.egg-info",
+                "--exclude=dist",
+                "--exclude=build",
+                "--exclude=tasknode_deploy.zip",
+                "./",
+                "tasknode_deploy/",
+            ],
+            capture_output=True,
+            text=True,
+        )
     if result.returncode != 0:
         typer.echo(f"Error copying files: {result.stderr}", err=True)
         raise typer.Exit(1)
@@ -133,26 +159,52 @@ def submit(
     print(" done")
 
     # get the size of the tasknode_deploy folder
-    unzipped_size_kb = subprocess.run(
-        ["du", "-sk", "tasknode_deploy/"], capture_output=True, text=True
-    )
-    unzipped_mb = float(unzipped_size_kb.stdout.split()[0]) / 1024
+    if os.name == "nt":  # Windows
+        # Use powershell to get folder size on Windows
+        result = subprocess.run(
+            ["powershell", "-Command", "(Get-ChildItem 'tasknode_deploy' -Recurse | Measure-Object -Property Length -Sum).Sum / 1KB"],
+            capture_output=True,
+            text=True
+        )
+        unzipped_mb = float(result.stdout.strip()) / 1024
+    else:  # Unix/Linux/Mac
+        unzipped_size_kb = subprocess.run(
+            ["du", "-sk", "tasknode_deploy/"], capture_output=True, text=True
+        )
+        unzipped_mb = float(unzipped_size_kb.stdout.split()[0]) / 1024
 
     # zip the tasknode_deploy folder
-    result = subprocess.run(
-        ["zip", "-r", "tasknode_deploy.zip", "tasknode_deploy/"],
-        capture_output=True,
-        text=True,
-    )
+    if os.name == "nt":  # Windows
+        result = subprocess.run(
+            ["powershell", "Compress-Archive", "-Path", "tasknode_deploy", "-DestinationPath", "tasknode_deploy.zip", "-Force"],
+            capture_output=True,
+            text=True,
+        )
+    else:  # Unix/Linux/Mac
+        result = subprocess.run(
+            ["zip", "-r", "tasknode_deploy.zip", "tasknode_deploy/"],
+            capture_output=True,
+            text=True,
+        )
+
     if result.returncode != 0:
         typer.echo(f"Error creating zip file: {result.stderr}", err=True)
         raise typer.Exit(1)
 
-    # get the size of the zipped tasknode_deploy folder
-    zipped_size_kb = subprocess.run(
-        ["du", "-sk", "tasknode_deploy.zip"], capture_output=True, text=True
-    )
-    zipped_mb = float(zipped_size_kb.stdout.split()[0]) / 1024
+    # get the size of the zipped file
+    if os.name == "nt":  # Windows
+        result = subprocess.run(
+            ["powershell", "-Command", "(Get-Item 'tasknode_deploy.zip').length / 1KB"],
+            capture_output=True,
+            text=True
+        )
+        zipped_mb = float(result.stdout.strip()) / 1024
+    else:  # Unix/Linux/Mac
+        zipped_size_kb = subprocess.run(
+            ["du", "-sk", "tasknode_deploy.zip"], capture_output=True, text=True
+        )
+        zipped_mb = float(zipped_size_kb.stdout.split()[0]) / 1024
+
     print("")
     print(f"Deployment size unzipped: {unzipped_mb:.2f} MB")
     print(f"Deployment size zipped: {zipped_mb:.2f} MB\n")
@@ -188,11 +240,18 @@ def submit(
         raise typer.Exit(1)
     finally:
         # Clean up temporary files
-        cleanup_result = subprocess.run(
-            ["rm", "-rf", "tasknode_deploy", "tasknode_deploy.zip"],
-            capture_output=True,
-            text=True,
-        )
+        if os.name == "nt":  # Windows
+            cleanup_result = subprocess.run(
+                ["powershell", "-Command", "Remove-Item -Path tasknode_deploy,tasknode_deploy.zip -Recurse -Force"],
+                capture_output=True,
+                text=True,
+            )
+        else:  # Unix/Linux/Mac
+            cleanup_result = subprocess.run(
+                ["rm", "-rf", "tasknode_deploy", "tasknode_deploy.zip"],
+                capture_output=True,
+                text=True,
+            )
         if cleanup_result.returncode != 0:
             typer.echo(
                 f"Warning: Error during cleanup: {cleanup_result.stderr}", err=True
