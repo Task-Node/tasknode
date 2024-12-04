@@ -28,3 +28,6 @@ ENV/
 # IDE
 .idea/
 .vscode/
+
+# MacOS
+.DS_Store
