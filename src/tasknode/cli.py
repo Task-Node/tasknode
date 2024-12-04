@@ -113,7 +113,7 @@ def submit(
 @app.command()
 def list_jobs():
     """
-    List your TaskNode jobs.
+    List your TaskNode jobs and their statuses.
     """
     return tasks.list_jobs()
 

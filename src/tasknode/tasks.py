@@ -6,6 +6,8 @@ import keyring
 import requests
 from rich import print
 from rich.table import Table
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from tasknode.auth import get_valid_token
 from tasknode.constants import API_URL
@@ -195,7 +197,7 @@ def submit(
 
 def list_jobs():
     """
-    List all jobs for the current user.
+    List your TaskNode jobs and their statuses.
     """
     # Get authentication token
     print("Getting authentication token...", end="", flush=True)
@@ -231,14 +233,18 @@ def list_jobs():
 
             # Add rows to the table
             for job in jobs_data["jobs"]:
-                created_at = job["created_at"].replace("T", " ").split(".")[0]
-                updated_at = job["updated_at"].replace("T", " ").split(".")[0]
-                table.add_row(
-                    str(job["id"]),
-                    job["status"],
-                    created_at,
-                    updated_at
+                # Convert UTC times to local timezone
+                created_dt = datetime.fromisoformat(job["created_at"]).replace(
+                    tzinfo=ZoneInfo("UTC")
                 )
+                updated_dt = datetime.fromisoformat(job["updated_at"]).replace(
+                    tzinfo=ZoneInfo("UTC")
+                )
+
+                created_at = created_dt.astimezone().strftime("%Y-%m-%d %H:%M:%S%z")
+                updated_at = updated_dt.astimezone().strftime("%Y-%m-%d %H:%M:%S%z")
+
+                table.add_row(str(job["id"]), job["status"], created_at, updated_at)
 
             # Print the table
             print("")
@@ -246,11 +252,13 @@ def list_jobs():
 
             # If we got exactly 10 jobs, there might be more
             if len(jobs_data["jobs"]) == limit:
-                should_continue = typer.confirm("\nThere might be more jobs. Would you like to see the next page?")
+                should_continue = typer.confirm(
+                    "\nThere might be more jobs. Would you like to see the next page?"
+                )
                 if should_continue:
                     offset += limit
                     continue
-            
+
             break
 
         except requests.exceptions.RequestException as e:
