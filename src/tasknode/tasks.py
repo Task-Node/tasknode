@@ -5,6 +5,7 @@ import typer
 import keyring
 import requests
 from rich import print
+from rich.table import Table
 
 from tasknode.auth import get_valid_token
 from tasknode.constants import API_URL
@@ -148,7 +149,7 @@ def submit(
     zipped_mb = float(zipped_size_kb.stdout.split()[0]) / 1024
     print("")
     print(f"Deployment size unzipped: {unzipped_mb:.2f} MB")
-    print(f"Deployment size zipped: {zipped_mb:.2f} MB")
+    print(f"Deployment size zipped: {zipped_mb:.2f} MB\n")
 
     # Check if the folder size is greater than 300MB
     if unzipped_mb > 300:
@@ -174,7 +175,7 @@ def submit(
             upload_response.raise_for_status()
 
         print(" done")
-        print("[bold green]Successfully[/bold green] submitted task! 🚀")
+        print("\n[bold green]Successfully[/bold green] submitted task! 🚀")
 
     except requests.exceptions.RequestException as e:
         typer.echo(f"Upload failed: {str(e)}", err=True)
@@ -190,3 +191,68 @@ def submit(
             typer.echo(
                 f"Warning: Error during cleanup: {cleanup_result.stderr}", err=True
             )
+
+
+def list_jobs():
+    """
+    List all jobs for the current user.
+    """
+    # Get authentication token
+    print("Getting authentication token...", end="", flush=True)
+    try:
+        access_token = get_valid_token()
+        print(" done")
+    except keyring.errors.KeyringError as e:
+        print(" error")
+        typer.echo(f"Authentication error: {str(e)}", err=True)
+        raise typer.Exit(1)
+
+    offset = 0
+    limit = 10
+    while True:
+        try:
+            # Fetch jobs from the API with pagination
+            response = requests.get(
+                f"{API_URL}/api/v1/jobs/list",
+                params={"limit": limit, "offset": offset},
+                headers={"Authorization": f"Bearer {access_token}"},
+            )
+            response.raise_for_status()
+            jobs_data = response.json()
+
+            # Create and configure the table
+            num_jobs = len(jobs_data["jobs"])
+            end_index = offset + num_jobs
+            table = Table(title=f"Your TaskNode jobs ({offset + 1} - {end_index})")
+            table.add_column("Job ID", style="cyan")
+            table.add_column("Status", style="magenta")
+            table.add_column("Created At", style="green")
+            table.add_column("Updated At", style="yellow")
+
+            # Add rows to the table
+            for job in jobs_data["jobs"]:
+                created_at = job["created_at"].replace("T", " ").split(".")[0]
+                updated_at = job["updated_at"].replace("T", " ").split(".")[0]
+                table.add_row(
+                    str(job["id"]),
+                    job["status"],
+                    created_at,
+                    updated_at
+                )
+
+            # Print the table
+            print("")
+            print(table)
+
+            # If we got exactly 10 jobs, there might be more
+            if len(jobs_data["jobs"]) == limit:
+                should_continue = typer.confirm("\nThere might be more jobs. Would you like to see the next page?")
+                if should_continue:
+                    offset += limit
+                    continue
+            
+            break
+
+        except requests.exceptions.RequestException as e:
+            typer.echo(f"Failed to fetch jobs: {str(e)}", err=True)
+            raise typer.Exit(1)

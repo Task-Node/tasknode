@@ -172,7 +172,7 @@ def refresh_tokens() -> Optional[str]:
 
         response = requests.post(
             f"{API_URL}/api/v1/users/refresh-token",
-            json={"refresh_token": refresh_token},
+            params={"refresh_token": refresh_token},
         )
         response.raise_for_status()
         tokens = response.json()
@@ -182,7 +182,11 @@ def refresh_tokens() -> Optional[str]:
         keyring.set_password(SERVICE_NAME, "id_token", tokens["id_token"])
 
         return tokens["access_token"]
-    except Exception:
+    except requests.exceptions.RequestException as e:
+        typer.echo(f"Token refresh failed: {str(e)}", err=True)
+        return None
+    except keyring.errors.KeyringError as e:
+        typer.echo(f"Keyring error: {str(e)}", err=True)
         return None
 
 

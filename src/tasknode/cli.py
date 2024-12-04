@@ -21,6 +21,7 @@ def show_available_commands(ctx: typer.Context, value: bool):
 
         typer.echo("\n🚀 Core Functions:")
         typer.echo("  • submit                   Submit a Python script to be run in the cloud")
+        typer.echo("  • list-jobs                List your TaskNode jobs")
 
         typer.echo("\nℹ️  Help:")
         typer.echo("  • help                     Show help for the TaskNode CLI")
@@ -49,19 +50,6 @@ def help():
     Show help for the TaskNode CLI.
     """
     show_available_commands(None, True)
-
-
-@app.command()
-def submit(
-    script: str = typer.Argument(
-        ...,
-        help="The Python script to run (relative to the current directory, for example 'script.py' or 'path/to/script.py')",
-    ),
-):
-    """
-    Submit a Python script to be run in the cloud.
-    """
-    return tasks.submit(script)
 
 
 @app.command()
@@ -107,6 +95,27 @@ def whoami():
     Show information about the currently logged in user.
     """
     return auth.whoami()
+
+
+@app.command()
+def submit(
+    script: str = typer.Argument(
+        ...,
+        help="The Python script to run (relative to the current directory, for example 'script.py' or 'path/to/script.py')",
+    ),
+):
+    """
+    Submit a Python script to be run in the cloud.
+    """
+    return tasks.submit(script)
+
+
+@app.command()
+def list_jobs():
+    """
+    List your TaskNode jobs.
+    """
+    return tasks.list_jobs()
 
 
 if __name__ == "__main__":
