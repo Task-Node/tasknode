@@ -195,7 +195,7 @@ def submit(
             )
 
 
-def list_jobs():
+def list_jobs(offset: int = 0):
     """
     List your TaskNode jobs and their statuses.
     """
@@ -209,65 +209,56 @@ def list_jobs():
         typer.echo(f"Authentication error: {str(e)}", err=True)
         raise typer.Exit(1)
 
-    offset = 0
-    limit = 10
-    while True:
-        try:
-            # Fetch jobs from the API with pagination
-            response = requests.get(
-                f"{API_URL}/api/v1/jobs/list",
-                params={"limit": limit, "offset": offset},
-                headers={"Authorization": f"Bearer {access_token}"},
+    limit = 20
+    try:
+        # Fetch jobs from the API with pagination
+        response = requests.get(
+            f"{API_URL}/api/v1/jobs/list",
+            params={"limit": limit, "offset": offset},
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        response.raise_for_status()
+        jobs_data = response.json()
+
+        # Create and configure the table
+        num_jobs = len(jobs_data["jobs"])
+        total_job_count = jobs_data["total_count"]
+        end_index = offset + num_jobs
+        
+        # Only show count details if there are more jobs than currently displayed
+        title = "Your TaskNode jobs"
+        if total_job_count > limit:
+            title += f" ({offset + 1} - {end_index} of {total_job_count})"
+        
+        table = Table(title=title)
+        table.add_column("Job ID", style="cyan")
+        table.add_column("Status", style="magenta")
+        table.add_column("Created At", style="green")
+        table.add_column("Updated At", style="yellow")
+
+        # Add rows to the table
+        for job in jobs_data["jobs"]:
+            created_dt = datetime.fromisoformat(job["created_at"]).replace(
+                tzinfo=ZoneInfo("UTC")
             )
-            response.raise_for_status()
-            jobs_data = response.json()
+            updated_dt = datetime.fromisoformat(job["updated_at"]).replace(
+                tzinfo=ZoneInfo("UTC")
+            )
 
-            # Create and configure the table
-            num_jobs = len(jobs_data["jobs"])
-            total_job_count = jobs_data["total_count"]
-            end_index = offset + num_jobs
-            
-            # Only show count details if there are more jobs than currently displayed
-            title = "Your TaskNode jobs"
-            if total_job_count > limit:
-                title += f" ({offset + 1} - {end_index} of {total_job_count})"
-            
-            table = Table(title=title)
-            table.add_column("Job ID", style="cyan")
-            table.add_column("Status", style="magenta")
-            table.add_column("Created At", style="green")
-            table.add_column("Updated At", style="yellow")
+            created_at = created_dt.astimezone().strftime("%Y-%m-%d %H:%M:%S%z")
+            updated_at = updated_dt.astimezone().strftime("%Y-%m-%d %H:%M:%S%z")
 
-            # Add rows to the table
-            for job in jobs_data["jobs"]:
-                # Convert UTC times to local timezone
-                created_dt = datetime.fromisoformat(job["created_at"]).replace(
-                    tzinfo=ZoneInfo("UTC")
-                )
-                updated_dt = datetime.fromisoformat(job["updated_at"]).replace(
-                    tzinfo=ZoneInfo("UTC")
-                )
+            table.add_row(str(job["id"]), job["status"], created_at, updated_at)
 
-                created_at = created_dt.astimezone().strftime("%Y-%m-%d %H:%M:%S%z")
-                updated_at = updated_dt.astimezone().strftime("%Y-%m-%d %H:%M:%S%z")
+        # Print the table
+        print("")
+        print(table)
 
-                table.add_row(str(job["id"]), job["status"], created_at, updated_at)
+        # If there are more jobs available, show the command to see the next page
+        if end_index < total_job_count:
+            next_offset = offset + limit
+            print(f"To see the next page, run: `tasknode list-jobs --offset {next_offset}`")
 
-            # Print the table
-            print("")
-            print(table)
-
-            # If there are more jobs available
-            if end_index < total_job_count:
-                should_continue = typer.confirm(
-                    f"\nShowing {end_index} of {total_job_count} jobs. Would you like to see the next page?"
-                )
-                if should_continue:
-                    offset += limit
-                    continue
-
-            break
-
-        except requests.exceptions.RequestException as e:
-            typer.echo(f"Failed to fetch jobs: {str(e)}", err=True)
-            raise typer.Exit(1)
+    except requests.exceptions.RequestException as e:
+        typer.echo(f"Failed to fetch jobs: {str(e)}", err=True)
+        raise typer.Exit(1)

@@ -111,11 +111,13 @@ def submit(
 
 
 @app.command()
-def list_jobs():
+def list_jobs(
+    offset: int = typer.Option(0, "--offset", "-o", help="Number of jobs to skip")
+):
     """
     List your TaskNode jobs and their statuses.
     """
-    return tasks.list_jobs()
+    return tasks.list_jobs(offset)
 
 
 if __name__ == "__main__":
