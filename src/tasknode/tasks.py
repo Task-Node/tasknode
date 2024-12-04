@@ -16,11 +16,11 @@ from tasknode.constants import API_URL
 def submit(
     script: str = typer.Argument(
         ...,
-        help="The Python script to run (relative to the current directory, for example 'script.py' or 'path/to/script.py')",
+        help="The Python script or Jupyter notebook to run (relative to the current directory, for example 'script.py', 'path/to/script.py', or 'notebook.ipynb')",
     ),
 ):
     """
-    Submit a Python script to be run in the cloud.
+    Submit a Python script or Jupyter notebook to be run in the cloud.
     """
     # Get authentication token
     print("Getting authentication token...", end="", flush=True)
@@ -32,9 +32,14 @@ def submit(
         typer.echo(f"Authentication error: {str(e)}", err=True)
         raise typer.Exit(1)
 
-    # Check if the script exists
+    # Check if the script exists and has valid extension
     if not os.path.exists(script):
         typer.echo(f"Error: Script '{script}' not found", err=True)
+        raise typer.Exit(1)
+
+    file_extension = os.path.splitext(script)[1].lower()
+    if file_extension not in ['.py', '.ipynb']:
+        typer.echo("Error: Only .py and .ipynb files are supported", err=True)
         raise typer.Exit(1)
 
     # delete the tasknode_deploy folder if it already exists

@@ -101,11 +101,11 @@ def whoami():
 def submit(
     script: str = typer.Argument(
         ...,
-        help="The Python script to run (relative to the current directory, for example 'script.py' or 'path/to/script.py')",
+        help="The Python script or Jupyter notebook to run (relative to the current directory, for example 'script.py', 'path/to/script.py', or 'notebook.ipynb')",
     ),
 ):
     """
-    Submit a Python script to be run in the cloud.
+    Submit a Python script or Jupyter notebook to be run in the cloud.
     """
     return tasks.submit(script)
 
