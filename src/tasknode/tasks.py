@@ -35,20 +35,26 @@ def submit(
         raise typer.Exit(1)
 
     # delete the tasknode_deploy folder if it already exists
-    result = subprocess.run(["rm", "-rf", "tasknode_deploy"], capture_output=True, text=True)
+    result = subprocess.run(
+        ["rm", "-rf", "tasknode_deploy"], capture_output=True, text=True
+    )
     if result.returncode != 0:
         typer.echo(f"Error removing existing deploy folder: {result.stderr}", err=True)
         raise typer.Exit(1)
 
     # create a new folder called tasknode_deploy
     print("Creating deploy folder...", end="", flush=True)
-    result = subprocess.run(["mkdir", "tasknode_deploy"], capture_output=True, text=True)
+    result = subprocess.run(
+        ["mkdir", "tasknode_deploy"], capture_output=True, text=True
+    )
     if result.returncode != 0:
         typer.echo(f"Error creating deploy folder: {result.stderr}", err=True)
         raise typer.Exit(1)
 
     # remove the tasknode_deploy folder if it already exists
-    result = subprocess.run(["rm", "-rf", "tasknode_deploy"], capture_output=True, text=True)
+    result = subprocess.run(
+        ["rm", "-rf", "tasknode_deploy"], capture_output=True, text=True
+    )
     if result.returncode != 0:
         typer.echo(f"Error removing existing deploy folder: {result.stderr}", err=True)
         raise typer.Exit(1)
@@ -120,21 +126,25 @@ def submit(
     print(" done")
 
     # get the size of the tasknode_deploy folder
-    unzipped_size_kb = subprocess.run(["du", "-sk", "tasknode_deploy/"], capture_output=True, text=True)
+    unzipped_size_kb = subprocess.run(
+        ["du", "-sk", "tasknode_deploy/"], capture_output=True, text=True
+    )
     unzipped_mb = float(unzipped_size_kb.stdout.split()[0]) / 1024
 
     # zip the tasknode_deploy folder
     result = subprocess.run(
-        ["zip", "-r", "tasknode_deploy.zip", "tasknode_deploy/"], 
-        capture_output=True, 
-        text=True
+        ["zip", "-r", "tasknode_deploy.zip", "tasknode_deploy/"],
+        capture_output=True,
+        text=True,
     )
     if result.returncode != 0:
         typer.echo(f"Error creating zip file: {result.stderr}", err=True)
         raise typer.Exit(1)
 
     # get the size of the zipped tasknode_deploy folder
-    zipped_size_kb = subprocess.run(["du", "-sk", "tasknode_deploy.zip"], capture_output=True, text=True)
+    zipped_size_kb = subprocess.run(
+        ["du", "-sk", "tasknode_deploy.zip"], capture_output=True, text=True
+    )
     zipped_mb = float(zipped_size_kb.stdout.split()[0]) / 1024
     print("")
     print(f"Deployment size unzipped: {unzipped_mb:.2f} MB")
@@ -144,7 +154,7 @@ def submit(
     if unzipped_mb > 300:
         typer.echo("Error: TaskNode only supports deployments up to 300MB.", err=True)
         raise typer.Exit(1)
-    
+
     try:
         print("Uploading code to S3...", end="", flush=True)
         response = requests.get(
@@ -174,7 +184,9 @@ def submit(
         cleanup_result = subprocess.run(
             ["rm", "-rf", "tasknode_deploy", "tasknode_deploy.zip"],
             capture_output=True,
-            text=True
+            text=True,
         )
         if cleanup_result.returncode != 0:
-            typer.echo(f"Warning: Error during cleanup: {cleanup_result.stderr}", err=True)
+            typer.echo(
+                f"Warning: Error during cleanup: {cleanup_result.stderr}", err=True
+            )
