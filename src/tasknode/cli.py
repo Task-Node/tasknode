@@ -120,6 +120,8 @@ def submit(
     """
     Submit a Python script or Jupyter notebook to be run in the cloud.
     """
+    # Normalize path separators before passing to tasks.submit
+    script = script.replace('\\', '/')
     return tasks.submit(script)
 
 

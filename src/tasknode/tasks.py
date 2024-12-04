@@ -7,6 +7,9 @@ from rich import print
 from rich.table import Table
 from datetime import datetime
 from zoneinfo import ZoneInfo
+import shutil
+import platform
+import zipfile
 
 from tasknode.auth import get_valid_token
 from tasknode.constants import API_URL
@@ -43,88 +46,66 @@ def submit(
 
     # delete the tasknode_deploy folder if it already exists
     if os.path.exists("tasknode_deploy"):
-        if os.name == "nt":  # Windows
-            result = subprocess.run(
-                ["rmdir", "/s", "/q", "tasknode_deploy"], capture_output=True, text=True
-            )
-        else:  # Unix/Linux/Mac
-            result = subprocess.run(
-                ["rm", "-rf", "tasknode_deploy"], capture_output=True, text=True
-            )
-        if result.returncode != 0:
-            typer.echo(f"Error removing existing deploy folder: {result.stderr}", err=True)
+        try:
+            shutil.rmtree("tasknode_deploy")
+        except Exception as e:
+            typer.echo(f"Error removing existing deploy folder: {str(e)}", err=True)
             raise typer.Exit(1)
 
     # create a new folder called tasknode_deploy
     print("Creating deploy folder... ", end="", flush=True)
-    os.makedirs("tasknode_deploy", exist_ok=True)
+    try:
+        os.makedirs("tasknode_deploy", exist_ok=True)
+        print(" done")
+    except Exception as e:
+        typer.echo(f"Error creating deploy folder: {str(e)}", err=True)
+        raise typer.Exit(1)
 
-    # Copy everything in the current directory into tasknode_deploy folder
-    if os.name == "nt":  # Windows
-        # Create temporary exclude file for Windows
-        exclude_patterns = [
-            ".git",
-            "node_modules",
-            "tasknode_deploy",
-            "__pycache__",
-            "*.pyc",
-            "*.pyo",
-            "*.pyd",
-            ".env",
-            "venv",
-            ".venv",
-            ".idea",
-            ".vscode",
-            "*.egg-info",
-            "dist",
-            "build",
-            "tasknode_deploy.zip",
-        ]
-        with open("exclude.txt", "w") as f:
-            for pattern in exclude_patterns:
-                f.write(pattern + "\n")
+    # Define patterns to exclude
+    exclude_patterns = {
+        "tasknode_deploy.zip",
+        "tasknode_deploy",
+        ".git",
+        "node_modules",
+        "__pycache__",
+        ".env",
+        "venv",
+        ".venv",
+        ".idea",
+        ".vscode",
+        "dist",
+        "build",
+    }
 
-        result = subprocess.run(
-            ["xcopy", ".", "tasknode_deploy", "/E", "/I", "/Y", "/EXCLUDE:exclude.txt"],
-            capture_output=True,
-            text=True,
-        )
-
-        # Clean up temporary exclude file
-        os.remove("exclude.txt")
-    else:  # Unix/Linux/Mac
-        result = subprocess.run(
-            [
-                "rsync",
-                "-av",
-                "--exclude=.git",
-                "--exclude=node_modules",
-                "--exclude=tasknode_deploy",
-                "--exclude=__pycache__",
-                "--exclude=*.pyc",
-                "--exclude=*.pyo",
-                "--exclude=*.pyd",
-                "--exclude=.env",
-                "--exclude=venv",
-                "--exclude=.venv",
-                "--exclude=.idea",
-                "--exclude=.vscode",
-                "--exclude=*.egg-info",
-                "--exclude=dist",
-                "--exclude=build",
-                "--exclude=tasknode_deploy.zip",
-                "./",
-                "tasknode_deploy/",
-            ],
-            capture_output=True,
-            text=True,
-        )
-    if result.returncode != 0:
-        typer.echo(f"Error copying files: {result.stderr}", err=True)
+    print("Copying files... ", end="", flush=True)
+    try:
+        for root, dirs, files in os.walk('.', topdown=True):
+            # Skip excluded directories
+            dirs[:] = [d for d in dirs if d not in exclude_patterns]
+            
+            for file in files:
+                src_path = os.path.join(root, file)
+                if should_copy(src_path, exclude_patterns):
+                    # Convert source path to relative path
+                    rel_path = os.path.relpath(src_path, '.')
+                    dst_path = os.path.join('tasknode_deploy', rel_path)
+                    
+                    # Create destination directory if it doesn't exist
+                    os.makedirs(os.path.dirname(dst_path), exist_ok=True)
+                    
+                    # Copy the file
+                    shutil.copy2(src_path, dst_path)
+    except Exception as e:
+        typer.echo(f"Error copying files: {str(e)}", err=True)
         raise typer.Exit(1)
 
     # get the results of running pip freeze and filter out tasknode packages
-    result = subprocess.run(["pip", "freeze"], capture_output=True, text=True)
+    result = subprocess.run(
+        ["pip", "freeze"], 
+        capture_output=True, 
+        text=True,
+        shell=platform.system() == "Windows"
+    )
     requirements = [
         line for line in result.stdout.splitlines() if not "tasknode" in line.lower()
     ]
@@ -137,15 +118,14 @@ def submit(
     print("Getting system info... ", end="", flush=True)
     # find out which version of python is being used
     python_version = subprocess.run(
-        ["python", "--version"], capture_output=True, text=True
+        ["python", "--version"], 
+        capture_output=True, 
+        text=True,
+        shell=platform.system() == "Windows"
     )
 
     # Determine the OS type (Windows/Mac/Linux)
-    if os.name == "nt":
-        os_type = "Windows"
-    else:
-        os_info = subprocess.run(["uname"], capture_output=True, text=True)
-        os_type = "Mac" if "Darwin" in os_info.stdout else "Linux"
+    os_type = platform.system()
 
     run_info = {
         "python_version": python_version.stdout.strip(),
@@ -159,51 +139,13 @@ def submit(
     print(" done")
 
     # get the size of the tasknode_deploy folder
-    if os.name == "nt":  # Windows
-        # Use powershell to get folder size on Windows
-        result = subprocess.run(
-            ["powershell", "-Command", "(Get-ChildItem 'tasknode_deploy' -Recurse | Measure-Object -Property Length -Sum).Sum / 1KB"],
-            capture_output=True,
-            text=True
-        )
-        unzipped_mb = float(result.stdout.strip()) / 1024
-    else:  # Unix/Linux/Mac
-        unzipped_size_kb = subprocess.run(
-            ["du", "-sk", "tasknode_deploy/"], capture_output=True, text=True
-        )
-        unzipped_mb = float(unzipped_size_kb.stdout.split()[0]) / 1024
+    unzipped_mb = get_folder_size("tasknode_deploy")
 
     # zip the tasknode_deploy folder
-    if os.name == "nt":  # Windows
-        result = subprocess.run(
-            ["powershell", "Compress-Archive", "-Path", "tasknode_deploy", "-DestinationPath", "tasknode_deploy.zip", "-Force"],
-            capture_output=True,
-            text=True,
-        )
-    else:  # Unix/Linux/Mac
-        result = subprocess.run(
-            ["zip", "-r", "tasknode_deploy.zip", "tasknode_deploy/"],
-            capture_output=True,
-            text=True,
-        )
+    create_zip("tasknode_deploy", "tasknode_deploy.zip")
 
-    if result.returncode != 0:
-        typer.echo(f"Error creating zip file: {result.stderr}", err=True)
-        raise typer.Exit(1)
-
-    # get the size of the zipped file
-    if os.name == "nt":  # Windows
-        result = subprocess.run(
-            ["powershell", "-Command", "(Get-Item 'tasknode_deploy.zip').length / 1KB"],
-            capture_output=True,
-            text=True
-        )
-        zipped_mb = float(result.stdout.strip()) / 1024
-    else:  # Unix/Linux/Mac
-        zipped_size_kb = subprocess.run(
-            ["du", "-sk", "tasknode_deploy.zip"], capture_output=True, text=True
-        )
-        zipped_mb = float(zipped_size_kb.stdout.split()[0]) / 1024
+    # Get zip file size using Python's os.path.getsize()
+    zipped_mb = os.path.getsize("tasknode_deploy.zip") / (1024 * 1024)  # Convert bytes to MB
 
     print("")
     print(f"Deployment size unzipped: {unzipped_mb:.2f} MB")
@@ -240,23 +182,25 @@ def submit(
         raise typer.Exit(1)
     finally:
         # Clean up temporary files
-        if os.name == "nt":  # Windows
-            cleanup_result = subprocess.run(
-                ["powershell", "-Command", "Remove-Item -Path tasknode_deploy,tasknode_deploy.zip -Recurse -Force"],
-                capture_output=True,
-                text=True,
-            )
-        else:  # Unix/Linux/Mac
-            cleanup_result = subprocess.run(
-                ["rm", "-rf", "tasknode_deploy", "tasknode_deploy.zip"],
-                capture_output=True,
-                text=True,
-            )
-        if cleanup_result.returncode != 0:
+        try:
+            if os.path.exists("tasknode_deploy"):
+                shutil.rmtree("tasknode_deploy")
+            if os.path.exists("tasknode_deploy.zip"):
+                os.remove("tasknode_deploy.zip")
+        except Exception as e:
             typer.echo(
-                f"Warning: Error during cleanup: {cleanup_result.stderr}", err=True
+                f"Warning: Error during cleanup: {str(e)}", err=True
             )
 
+
+def should_copy(path, exclude_patterns):
+    # Use os.path.normpath to handle Windows paths correctly
+    path = os.path.normpath(path)
+    # Use os.path.split instead of string split for cross-platform compatibility
+    parts = path.split(os.sep)
+    if any(part in exclude_patterns for part in parts):
+        return False
+    return not path.endswith(('.pyc', '.pyo', '.pyd', '.egg-info'))
 
 def list_jobs(offset: int = 0):
     """
@@ -327,3 +271,19 @@ def list_jobs(offset: int = 0):
     except requests.exceptions.RequestException as e:
         typer.echo(f"Failed to fetch jobs: {str(e)}", err=True)
         raise typer.Exit(1)
+
+def get_folder_size(path):
+    total_size = 0
+    for dirpath, dirnames, filenames in os.walk(path):
+        for filename in filenames:
+            filepath = os.path.join(dirpath, filename)
+            total_size += os.path.getsize(filepath)
+    return total_size / (1024 * 1024)  # Convert to MB
+
+def create_zip(source_path, output_path):
+    with zipfile.ZipFile(output_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for root, dirs, files in os.walk(source_path):
+            for file in files:
+                file_path = os.path.join(root, file)
+                arcname = os.path.relpath(file_path, source_path)
+                zipf.write(file_path, arcname)
