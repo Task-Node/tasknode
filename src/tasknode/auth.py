@@ -141,7 +141,10 @@ def whoami():
     try:
         id_token = keyring.get_password(SERVICE_NAME, "id_token")
         if not id_token:
-            typer.echo("Not logged in. Please login using 'tasknode login'", err=True)
+            typer.echo(
+                "Not logged in. Please login using 'tasknode login' or sign up using 'tasknode signup'.",
+                err=True,
+            )
             raise typer.Exit(1)
 
         try:
@@ -155,7 +158,10 @@ def whoami():
         typer.echo(f"Error accessing keyring: {str(e)}", err=True)
         raise typer.Exit(1)
     except Exception as e:
-        typer.echo("Not logged in. Please login using 'tasknode login'", err=True)
+        typer.echo(
+            "Not logged in. Please login using 'tasknode login' or sign up using 'tasknode signup'.",
+            err=True,
+        )
         raise typer.Exit(1)
 
 
@@ -196,7 +202,10 @@ def get_valid_token() -> str:
     """
     access_token = keyring.get_password(SERVICE_NAME, "access_token")
     if not access_token:
-        typer.echo("Please login first using 'tasknode login'", err=True)
+        typer.echo(
+            "Please login first using 'tasknode login' or sign up using 'tasknode signup'.",
+            err=True,
+        )
         raise typer.Exit(1)
 
     # Try to use the token
@@ -210,7 +219,7 @@ def get_valid_token() -> str:
         if new_token:
             return new_token
         typer.echo(
-            "Session expired. Please login again using 'tasknode login'", err=True
+            "Session expired. Please login again using 'tasknode login'.", err=True
         )
         raise typer.Exit(1)
 

@@ -23,7 +23,7 @@ def submit(
     Submit a Python script or Jupyter notebook to be run in the cloud.
     """
     # Get authentication token
-    print("Getting authentication token...", end="", flush=True)
+    print("Getting authentication token... ", end="", flush=True)
     try:
         access_token = get_valid_token()
         print(" done")
@@ -51,7 +51,7 @@ def submit(
         raise typer.Exit(1)
 
     # create a new folder called tasknode_deploy
-    print("Creating deploy folder...", end="", flush=True)
+    print("Creating deploy folder... ", end="", flush=True)
     result = subprocess.run(
         ["mkdir", "tasknode_deploy"], capture_output=True, text=True
     )
@@ -109,7 +109,7 @@ def submit(
         f.write("\n".join(requirements))
     print(" done")
 
-    print("Getting system info...", end="", flush=True)
+    print("Getting system info... ", end="", flush=True)
     # find out which version of python is being used
     python_version = subprocess.run(
         ["python", "--version"], capture_output=True, text=True
@@ -164,7 +164,7 @@ def submit(
         raise typer.Exit(1)
 
     try:
-        print("Uploading code to S3...", end="", flush=True)
+        print("Uploading code to S3... ", end="", flush=True)
         response = requests.get(
             f"{API_URL}/api/v1/jobs/get_zip_upload_url",
             headers={"Authorization": f"Bearer {access_token}"},
@@ -205,7 +205,7 @@ def list_jobs(offset: int = 0):
     List your TaskNode jobs and their statuses.
     """
     # Get authentication token
-    print("Getting authentication token...", end="", flush=True)
+    print("Getting authentication token... ", end="", flush=True)
     try:
         access_token = get_valid_token()
         print(" done")
