@@ -1,15 +1,16 @@
+from datetime import datetime
 import json
 import os
-import subprocess
-import typer
 import requests
+import pkg_resources
+import platform
 from rich import print
 from rich.table import Table
-from datetime import datetime
-from zoneinfo import ZoneInfo
 import shutil
-import platform
+import sys
+import typer
 import zipfile
+from zoneinfo import ZoneInfo
 
 from tasknode.auth import get_valid_token
 from tasknode.constants import API_URL
@@ -99,15 +100,11 @@ def submit(
         typer.echo(f"Error copying files: {str(e)}", err=True)
         raise typer.Exit(1)
 
-    # get the results of running pip freeze and filter out tasknode packages
-    result = subprocess.run(
-        ["pip", "freeze"], 
-        capture_output=True, 
-        text=True,
-        shell=platform.system() == "Windows"
-    )
+    # get a list of installed packages
     requirements = [
-        line for line in result.stdout.splitlines() if not "tasknode" in line.lower()
+        f"{dist.key}=={dist.version}"
+        for dist in pkg_resources.working_set
+        if "tasknode" not in dist.key.lower()
     ]
 
     # write the filtered results to a file called requirements.txt
@@ -117,18 +114,13 @@ def submit(
 
     print("Getting system info... ", end="", flush=True)
     # find out which version of python is being used
-    python_version = subprocess.run(
-        ["python", "--version"], 
-        capture_output=True, 
-        text=True,
-        shell=platform.system() == "Windows"
-    )
+    python_version = sys.version.split()[0]
 
     # Determine the OS type (Windows/Mac/Linux)
     os_type = platform.system()
 
     run_info = {
-        "python_version": python_version.stdout.strip(),
+        "python_version": f"Python {python_version}",
         "os_info": os_type,
         "script": script,
     }
