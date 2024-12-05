@@ -76,7 +76,7 @@ TaskNode automatically detects your dependencies and packages them in a separate
 
 ### How does TaskNode handle my Python version?
 
-Right now, TaskNode only supports Python 3.12. We're working on adding support for other Python versions.
+Right now, TaskNode runs on Docker containers with Python 3.12. Most Python 3 code will work without any changes, but we're working on adding support for other Python versions.
 
 
 ### Where is the data processed?
