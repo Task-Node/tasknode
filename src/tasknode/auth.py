@@ -237,7 +237,7 @@ def signup(
             json={"email": email, "password": password},
         )
         login_response.raise_for_status()
-        
+
         tokens = login_response.json()
         store_tokens(tokens)
         typer.echo("Successfully logged in! 🎉")

@@ -25,21 +25,18 @@ First, install TaskNode:
 pip install tasknode
 ```
 
-Optionally, generate a script to run:
+Optionally, generate a sample Jupyter notebook to run:
 
 ```bash
-cat << 'EOF' > script.py
-with open("outputs.txt", "w") as file:
-    for number in range(1, 11):
-        file.write(f"{number}\n")
-print("Numbers 1-10 have been written to outputs.txt")
-EOF
+tasknode generate-sample
 ```
 
-Then, submit a script to run in the cloud:
+Then, submit a Jupyter notebook to run in the cloud:
 
 ```bash
-tasknode submit script.py
+tasknode submit sample.ipynb
+# or
+tasknode submit your_script.py
 ```
 
 ## Jupyter notebooks

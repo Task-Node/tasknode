@@ -21,8 +21,8 @@ def show_available_commands(ctx: typer.Context, value: bool = True):
 
         typer.echo("\n🚀 Task Management:")
         typer.echo("  • submit                   Submit a Python script to run")
-        typer.echo("  • list-jobs                List your TaskNode jobs")
-
+        typer.echo("  • jobs                     List your TaskNode jobs")
+        typer.echo("  • sample-notebook          Generate a sample Jupyter notebook to test with")
         typer.echo("\nℹ️  Help:")
         typer.echo("  • help                     Show help for the TaskNode CLI")
 
@@ -122,11 +122,22 @@ def submit(
 
 
 @app.command()
-def list_jobs(offset: int = typer.Option(0, "--offset", "-o", help="Number of jobs to skip")):
+def jobs(offset: int = typer.Option(0, "--offset", "-o", help="Number of jobs to skip")):
     """
     List your TaskNode jobs and their statuses.
     """
-    return tasks.list_jobs(offset)
+    return tasks.jobs(offset)
+
+
+@app.command()
+def generate_sample(
+    destination: str = typer.Argument(".", help="The destination directory to copy the notebook to"),
+):
+    """
+    Generate a sample Jupyter notebook in the specified directory.
+    The notebook is copied from the TaskNode repository's test.ipynb.
+    """
+    return tasks.generate_sample(destination)
 
 
 if __name__ == "__main__":

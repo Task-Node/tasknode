@@ -191,7 +191,7 @@ def should_copy(path, exclude_patterns):
     return not path.endswith((".pyc", ".pyo", ".pyd", ".egg-info"))
 
 
-def list_jobs(offset: int = 0):
+def jobs(offset: int = 0):
     """
     List your TaskNode jobs and their statuses.
     """
@@ -254,6 +254,39 @@ def list_jobs(offset: int = 0):
     except requests.exceptions.RequestException as e:
         typer.echo(f"Failed to fetch jobs: {str(e)}", err=True)
         raise typer.Exit(1)
+
+
+def generate_sample(
+    destination: str = typer.Argument(".", help="The destination directory to copy the notebook to"),
+):
+    """
+    Generate a sample Jupyter notebook in the specified directory.
+    The notebook is copied from the TaskNode repository's test.ipynb.
+    """
+    # GitHub raw content URL for the sample notebook
+    SAMPLE_NOTEBOOK_URL = "https://raw.githubusercontent.com/Task-Node/tasknode/main/sample.ipynb"
+    OUTPUT_FILENAME = "sample.ipynb"
+
+    # Construct the full path to the destination
+    destination_path = os.path.join(destination, OUTPUT_FILENAME)
+
+    try:
+        # Download the notebook content
+        response = requests.get(SAMPLE_NOTEBOOK_URL)
+        response.raise_for_status()  # Raise an exception for bad status codes
+
+        # Create the destination directory if it doesn't exist
+        os.makedirs(destination, exist_ok=True)
+
+        # Write the notebook content to the destination
+        with open(destination_path, "wb") as f:
+            f.write(response.content)
+
+        typer.echo(f"✨ Sample notebook has been generated at '{destination_path}'")
+    except requests.RequestException as e:
+        typer.echo(f"❌ Error downloading the sample notebook: {e}")
+    except Exception as e:
+        typer.echo(f"❌ An error occurred: {e}")
 
 
 def get_folder_size(path):
