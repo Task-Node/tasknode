@@ -11,6 +11,7 @@ import sys
 import typer
 import zipfile
 from zoneinfo import ZoneInfo
+from rich.prompt import Confirm
 
 from tasknode.auth import get_valid_token
 from tasknode.constants import API_URL
@@ -44,6 +45,13 @@ def submit(
     if file_extension not in [".py", ".ipynb"]:
         typer.echo("Error: Only .py and .ipynb files are supported", err=True)
         raise typer.Exit(1)
+
+    deploy_full = Confirm.ask(
+        "\nDoes your script depend on other files in this directory (like modules, data files, or config files)?\n"
+        "[cyan]•[/cyan] Yes = deploy entire directory\n"
+        "[cyan]•[/cyan] No = deploy single script only (for standalone scripts) [dim](default)[/dim]\n",
+        default=False,
+    )
 
     # delete the tasknode_deploy folder if it already exists
     if os.path.exists("tasknode_deploy"):
@@ -80,35 +88,55 @@ def submit(
 
     print("Copying files... ", end="", flush=True)
     try:
-        for root, dirs, files in os.walk(".", topdown=True):
-            # Skip excluded directories
-            dirs[:] = [d for d in dirs if d not in exclude_patterns]
+        if deploy_full:
+            # Copy entire directory (existing behavior)
+            for root, dirs, files in os.walk(".", topdown=True):
+                # Skip excluded directories
+                dirs[:] = [d for d in dirs if d not in exclude_patterns]
 
-            for file in files:
-                src_path = os.path.join(root, file)
-                try:
-                    if should_copy(src_path, exclude_patterns):
-                        # Convert source path to relative path
-                        rel_path = os.path.relpath(src_path, ".")
-                        dst_path = os.path.join("tasknode_deploy", rel_path)
-
-                        # Create destination directory if it doesn't exist
-                        os.makedirs(os.path.dirname(dst_path), exist_ok=True)
-
-                        # Copy the file
-                        shutil.copy2(src_path, dst_path)
-                except PermissionError:
-                    typer.echo(f"Skipping file due to permission error: {src_path}", err=True)
+                for file in files:
+                    src_path = os.path.join(root, file)
+                    try:
+                        if should_copy(src_path, exclude_patterns):
+                            rel_path = os.path.relpath(src_path, ".")
+                            dst_path = os.path.join("tasknode_deploy", rel_path)
+                            os.makedirs(os.path.dirname(dst_path), exist_ok=True)
+                            shutil.copy2(src_path, dst_path)
+                    except PermissionError:
+                        typer.echo(f"Skipping file due to permission error: {src_path}", err=True)
+        else:
+            # Copy only the script file
+            dst_path = os.path.join("tasknode_deploy", os.path.basename(script))
+            shutil.copy2(script, dst_path)
     except Exception as e:
         typer.echo(f"Error copying files: {str(e)}", err=True)
         raise typer.Exit(1)
+    print(" done")
 
-    # get a list of installed packages
-    requirements = [
-        f"{dist.key}=={dist.version}" for dist in pkg_resources.working_set if "tasknode" not in dist.key.lower()
-    ]
+    requirements = []
+    requirements_file = "requirements.txt"
+    if os.path.exists(requirements_file):
+        use_requirements_file = Confirm.ask(
+            f"\nA {requirements_file} file was found. How would you like to handle dependencies?\n"
+            "[cyan]•[/cyan] Yes = use requirements.txt file [dim](default)[/dim]\n"
+            "[cyan]•[/cyan] No = use current environment's installed packages (like pip freeze)\n",
+            default=True,
+        )
+        if use_requirements_file:
+            print(f"Using {requirements_file} for dependencies... ", end="", flush=True)
+            with open(requirements_file, "r") as f:
+                requirements = f.readlines()
+            print(" done")
 
-    # write the filtered results to a file called requirements.txt
+    if not requirements:
+        # get a list of installed packages
+        print("Gathering current environment's packages... ", end="", flush=True)
+        requirements = [
+            f"{dist.key}=={dist.version}" for dist in pkg_resources.working_set if "tasknode" not in dist.key.lower()
+        ]
+        print(" done")
+
+    # write the filtered results to a file called requirements-tasknode.txt
     with open("tasknode_deploy/requirements-tasknode.txt", "w") as f:
         f.write("\n".join(requirements))
     print(" done")
