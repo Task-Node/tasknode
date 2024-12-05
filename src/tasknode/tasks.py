@@ -1,3 +1,4 @@
+
 from datetime import datetime
 import json
 import os
@@ -5,16 +6,19 @@ import requests
 import pkg_resources
 import platform
 from rich import print
+from rich.prompt import Confirm
 from rich.table import Table
 import shutil
 import sys
 import typer
 import zipfile
 from zoneinfo import ZoneInfo
-from rich.prompt import Confirm
 
 from tasknode.auth import get_valid_token
 from tasknode.constants import API_URL
+
+
+
 
 
 def submit(
@@ -46,7 +50,7 @@ def submit(
     deploy_full = Confirm.ask(
         "\nDoes your script depend on other files in this directory (like modules, data files, or config files)?\n"
         "[cyan]•[/cyan] Yes = deploy entire directory\n"
-        "[cyan]•[/cyan] No = deploy single script only (for standalone scripts) [dim](default)[/dim]\n",
+        "[cyan]•[/cyan] No = deploy single script only (for standalone scripts) [cyan](default)[/cyan]\n",
         default=False,
     )
 
@@ -115,7 +119,7 @@ def submit(
     if os.path.exists(requirements_file):
         use_requirements_file = Confirm.ask(
             f"\nA {requirements_file} file was found. How would you like to handle dependencies?\n"
-            "[cyan]•[/cyan] Yes = use requirements.txt file [dim](default)[/dim]\n"
+            "[cyan]•[/cyan] Yes = use requirements.txt file [cyan](default)[/cyan]\n"
             "[cyan]•[/cyan] No = use current environment's installed packages (like pip freeze)\n",
             default=True,
         )
@@ -198,15 +202,6 @@ def submit(
     except requests.exceptions.RequestException as e:
         typer.echo(f"Upload failed: {str(e)}", err=True)
         raise typer.Exit(1)
-    finally:
-        # Clean up temporary files
-        try:
-            if os.path.exists("tasknode_deploy"):
-                shutil.rmtree("tasknode_deploy")
-            if os.path.exists("tasknode_deploy.zip"):
-                os.remove("tasknode_deploy.zip")
-        except Exception as e:
-            typer.echo(f"Warning: Error during cleanup: {str(e)}", err=True)
 
 
 def should_copy(path, exclude_patterns):
@@ -256,6 +251,7 @@ def jobs(offset: int = 0):
         table.add_column("Status", style="magenta")
         table.add_column("Created At", style="green")
         table.add_column("Updated At", style="yellow")
+        table.add_column("Runtime", style="blue")
 
         # Add rows to the table
         for job in jobs_data["jobs"]:
@@ -265,7 +261,7 @@ def jobs(offset: int = 0):
             created_at = created_dt.astimezone().strftime("%Y-%m-%d %H:%M:%S%z")
             updated_at = updated_dt.astimezone().strftime("%Y-%m-%d %H:%M:%S%z")
 
-            table.add_row(str(job["id"]), job["status"], created_at, updated_at)
+            table.add_row(str(job["id"]), job["status"], created_at, updated_at, job["runtime"])
 
         # Print the table
         print("")
