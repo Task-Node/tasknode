@@ -1,4 +1,3 @@
-
 from datetime import datetime
 import json
 import os
@@ -16,7 +15,7 @@ from zoneinfo import ZoneInfo
 
 from tasknode.auth import get_valid_token
 from tasknode.constants import API_URL
-from tasknode.utils import format_time
+from tasknode.utils import format_file_size, format_time
 
 
 
@@ -327,3 +326,55 @@ def create_zip(source_path, output_path):
                 file_path = os.path.join(root, file)
                 arcname = os.path.relpath(file_path, source_path)
                 zipf.write(file_path, arcname)
+
+
+def get_job_details(job_id: str):
+    """
+    Get details of a specific TaskNode job.
+    """
+    # Get authentication token
+    try:
+        access_token = get_valid_token()
+    except Exception as e:
+        typer.echo(f"Authentication error: {str(e)}", err=True)
+        raise typer.Exit(1)
+
+    try:
+        # Fetch job details from the API
+        response = requests.get(
+            f"{API_URL}/api/v1/jobs/get/{job_id}",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+
+        if response.status_code == 404:
+            typer.echo(f"Job not found", err=True)
+            raise typer.Exit(1)
+
+        response.raise_for_status()
+        job_data = response.json()
+
+        # Display job details
+        print(f"\n[bold]Job ID:[/bold] {job_data['id']}")
+        print(f"[bold]Status:[/bold] {job_data['status']}")
+        print(f"[bold]Runtime:[/bold] {format_time(job_data['runtime'])}")
+        print(f"[bold]Created At:[/bold] {job_data['created_at']}")
+        print(f"[bold]Updated At:[/bold] {job_data['updated_at']}\n")
+
+        # Display files associated with the job
+        if job_data['files']:
+            table = Table(title="Generated Files")
+            table.add_column("File Name", style="cyan")
+            table.add_column("File Size", style="magenta")
+            table.add_column("Timestamp", style="green")
+
+            for file in job_data['files']:
+                file_size = format_file_size(file['file_size'])
+                table.add_row(file['file_name'], file_size, file['file_timestamp'])
+
+            print(table)
+        else:
+            print("No files associated with this job.")
+
+    except requests.exceptions.RequestException as e:
+        typer.echo(f"Failed to fetch job details: {str(e)}", err=True)
+        raise typer.Exit(1)

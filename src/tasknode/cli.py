@@ -38,6 +38,7 @@ def show_available_commands(ctx: typer.Context, value: bool = True):
         typer.echo("  • submit                   Submit a Python script to run")
         typer.echo("  • jobs                     List your TaskNode jobs")
         typer.echo("  • sample-notebook          Generate a sample Jupyter notebook to test with")
+        typer.echo("  • job <job_id>             Get details for a specific TaskNode job")
         typer.echo("\nℹ️  Help:")
         typer.echo("  • help                     Show help for the TaskNode CLI")
 
@@ -153,6 +154,14 @@ def generate_sample(
     The notebook is copied from the TaskNode repository's test.ipynb.
     """
     return tasks.generate_sample(destination)
+
+
+@app.command()
+def job(job_id: str):
+    """
+    Get details of a specific TaskNode job.
+    """
+    return tasks.get_job_details(job_id)
 
 
 if __name__ == "__main__":
