@@ -382,7 +382,7 @@ def get_job_details(job_id: str):
 
             print(table)
         else:
-            print("No files associated with this job.")
+            print("No generated files associated with this job.")
 
         # Add log tail outputs
         if job_data.get("output_log_tail"):
@@ -400,7 +400,7 @@ def get_job_details(job_id: str):
             print("[dim]─" * 50)
 
         if not job_data.get("output_log_tail") and not job_data.get("error_log_tail"):
-            print("\nNo log output available.")
+            print("\nNo log output available (check back soon)\n")
 
     except requests.exceptions.RequestException as e:
         typer.echo(f"Failed to fetch job details: {str(e)}", err=True)
