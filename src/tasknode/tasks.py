@@ -86,16 +86,19 @@ def submit(
 
             for file in files:
                 src_path = os.path.join(root, file)
-                if should_copy(src_path, exclude_patterns):
-                    # Convert source path to relative path
-                    rel_path = os.path.relpath(src_path, ".")
-                    dst_path = os.path.join("tasknode_deploy", rel_path)
+                try:
+                    if should_copy(src_path, exclude_patterns):
+                        # Convert source path to relative path
+                        rel_path = os.path.relpath(src_path, ".")
+                        dst_path = os.path.join("tasknode_deploy", rel_path)
 
-                    # Create destination directory if it doesn't exist
-                    os.makedirs(os.path.dirname(dst_path), exist_ok=True)
+                        # Create destination directory if it doesn't exist
+                        os.makedirs(os.path.dirname(dst_path), exist_ok=True)
 
-                    # Copy the file
-                    shutil.copy2(src_path, dst_path)
+                        # Copy the file
+                        shutil.copy2(src_path, dst_path)
+                except PermissionError:
+                    typer.echo(f"Skipping file due to permission error: {src_path}", err=True)
     except Exception as e:
         typer.echo(f"Error copying files: {str(e)}", err=True)
         raise typer.Exit(1)
