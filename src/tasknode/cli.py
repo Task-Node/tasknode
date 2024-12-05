@@ -27,20 +27,20 @@ def show_available_commands(ctx: typer.Context, value: bool = True):
         typer.echo("\n📋 Available Commands\n")
 
         typer.echo("🔑 Account Management:")
-        typer.echo("  • signup                   Sign up for a TaskNode account")
-        typer.echo("  • login                    Log in to your TaskNode account")
-        typer.echo("  • logout                   Log out of your TaskNode account")
-        typer.echo("  • resend-verification      Resend the email verification code")
-        typer.echo("  • reset-password           Reset your account password")
-        typer.echo("  • whoami                   Show current user information")
+        typer.echo("  • signup                    Sign up for a TaskNode account")
+        typer.echo("  • login                     Log in to your TaskNode account")
+        typer.echo("  • logout                    Log out of your TaskNode account")
+        typer.echo("  • resend-verification       Resend the email verification code")
+        typer.echo("  • reset-password            Reset your account password")
+        typer.echo("  • whoami                    Show current user information")
 
         typer.echo("\n🚀 Task Management:")
-        typer.echo("  • submit                   Submit a Python script to run")
-        typer.echo("  • jobs                     List your TaskNode jobs")
-        typer.echo("  • sample-notebook          Generate a sample Jupyter notebook to test with")
-        typer.echo("  • job <job_id>             Get details for a specific TaskNode job")
+        typer.echo("  • submit                    Submit a Python script to run")
+        typer.echo("  • jobs                      List your TaskNode jobs")
+        typer.echo("  • sample-notebook           Generate a sample Jupyter notebook to test with")
+        typer.echo("  • job <job_id || index>     Get details for a specific TaskNode job")
         typer.echo("\nℹ️  Help:")
-        typer.echo("  • help                     Show help for the TaskNode CLI")
+        typer.echo("  • help                      Show help for the TaskNode CLI")
 
         typer.echo("")  # Add a newline
         # fmt: on
@@ -157,9 +157,19 @@ def generate_sample(
 
 
 @app.command()
-def job(job_id: str):
+def job(
+    job_id: str = typer.Argument(
+        ...,
+        help="Job ID (UUID) or job index number (e.g., '1' for most recent job)",
+        metavar="JOB_ID",
+    ),
+):
     """
     Get details of a specific TaskNode job.
+
+    You can specify either:
+    - A job ID (UUID format)
+    - A job index number (e.g., '1' for most recent job, '2' for second most recent)
     """
     return tasks.get_job_details(job_id)
 

@@ -17,10 +17,6 @@ from tasknode.auth import get_valid_token
 from tasknode.constants import API_URL
 from tasknode.utils import format_file_size, format_time
 
-
-
-
-
 def submit(
     script: str = typer.Argument(
         ...,
@@ -247,6 +243,7 @@ def jobs(offset: int = 0):
             title += f" ({offset + 1} - {end_index} of {total_job_count})"
 
         table = Table(title=title)
+        table.add_column("Index", style="bold")
         table.add_column("Job ID", style="cyan")
         table.add_column("Status", style="magenta")
         table.add_column("Created At", style="green")
@@ -254,14 +251,14 @@ def jobs(offset: int = 0):
         table.add_column("Runtime", style="blue")
 
         # Add rows to the table
-        for job in jobs_data["jobs"]:
+        for index, job in enumerate(jobs_data["jobs"], start=offset + 1):
             created_dt = datetime.fromisoformat(job["created_at"]).replace(tzinfo=ZoneInfo("UTC"))
             updated_dt = datetime.fromisoformat(job["updated_at"]).replace(tzinfo=ZoneInfo("UTC"))
 
             created_at = created_dt.astimezone().strftime("%Y-%m-%d %H:%M:%S%z")
             updated_at = updated_dt.astimezone().strftime("%Y-%m-%d %H:%M:%S%z")
 
-            table.add_row(str(job["id"]), job["status"], created_at, updated_at, format_time(job["runtime"]))
+            table.add_row(str(index), str(job["id"]), job["status"], created_at, updated_at, format_time(job["runtime"]))
 
         # Print the table
         print("")
@@ -271,6 +268,8 @@ def jobs(offset: int = 0):
         if end_index < total_job_count:
             next_offset = offset + limit
             print(f"To see the next page, run: `tasknode list-jobs --offset {next_offset}`")
+            print("\nTo get details for a specific job, run: `tasknode job <job_id || index>`")
+            print("(for example `tasknode job 1` will get you the most recently created job and `tasknode job faa868f9-b0cb-4792-b176-64575dab86a7` will get you the job with that ID)")
 
     except requests.exceptions.RequestException as e:
         typer.echo(f"Failed to fetch jobs: {str(e)}", err=True)
@@ -330,9 +329,8 @@ def create_zip(source_path, output_path):
 
 def get_job_details(job_id: str):
     """
-    Get details of a specific TaskNode job.
+    Get details of a specific TaskNode job using either a job ID (UUID) or job index number.
     """
-    # Get authentication token
     try:
         access_token = get_valid_token()
     except Exception as e:
@@ -340,7 +338,7 @@ def get_job_details(job_id: str):
         raise typer.Exit(1)
 
     try:
-        # Fetch job details from the API
+        # Fetch job details using either UUID or index number
         response = requests.get(
             f"{API_URL}/api/v1/jobs/get/{job_id}",
             headers={"Authorization": f"Bearer {access_token}"},
