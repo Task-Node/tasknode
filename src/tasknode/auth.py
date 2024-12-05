@@ -177,11 +177,30 @@ def get_valid_token() -> str:
     access_token = tokens.get("access_token")
 
     if not access_token:
-        typer.echo(
-            "Please login first using 'tasknode login' or sign up using 'tasknode signup'.",
-            err=True,
+        print("You are not logged in.")
+        action = typer.prompt(
+            "\nWould you like to:\n1. Login\n2. Sign up\n3. Exit\nPlease choose (1-3)",
+            type=int,
+            default=3
         )
-        raise typer.Exit(1)
+        
+        if action == 1:
+            # Prompt for credentials manually instead of relying on typer.Option
+            email = typer.prompt("Email")
+            password = typer.prompt("Password", hide_input=True)
+            login(email=email, password=password)
+            # After login, get the new tokens
+            tokens = get_tokens()
+            return tokens.get("access_token", "")
+        elif action == 2:
+            signup()
+            # After signup, get the new tokens
+            tokens = get_tokens()
+            return tokens.get("access_token", "")
+        else:
+            exit(0)
+    
+    print("🔑 Successfully authenticated.")
 
     # Try to use the token
     response = requests.get(

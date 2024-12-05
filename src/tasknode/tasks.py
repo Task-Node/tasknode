@@ -27,12 +27,9 @@ def submit(
     Submit a Python script or Jupyter notebook to be run in the cloud.
     """
     # Get authentication token
-    print("Getting authentication token... ", end="", flush=True)
     try:
         access_token = get_valid_token()
-        print(" done")
     except Exception as e:
-        print(" error")
         typer.echo(f"Authentication error: {str(e)}", err=True)
         raise typer.Exit(1)
 
