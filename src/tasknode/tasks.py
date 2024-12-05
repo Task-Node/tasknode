@@ -247,8 +247,8 @@ def jobs(offset: int = 0):
         table.add_column("Index", style="bold")
         table.add_column("Job ID", style="cyan")
         table.add_column("Status", style="magenta")
-        table.add_column("Created At", style="green")
-        table.add_column("Updated At", style="yellow")
+        table.add_column("Created at", style="green")
+        table.add_column("Updated at", style="yellow")
         table.add_column("Runtime", style="blue")
 
         # Add rows to the table
@@ -356,12 +356,18 @@ def get_job_details(job_id: str):
         response.raise_for_status()
         job_data = response.json()
 
+        created_dt = datetime.fromisoformat(job_data["created_at"]).replace(tzinfo=ZoneInfo("UTC"))
+        updated_dt = datetime.fromisoformat(job_data["updated_at"]).replace(tzinfo=ZoneInfo("UTC"))
+
+        created_at = created_dt.astimezone().strftime("%Y-%m-%d %H:%M:%S%z")
+        updated_at = updated_dt.astimezone().strftime("%Y-%m-%d %H:%M:%S%z")
+
         # Display job details
         print(f"\n[bold]Job ID:[/bold] {job_data['id']}")
-        print(f"[bold]Status:[/bold] {job_data['status']}")
+        print(f"[bold]Status:[/bold] [plum3]{job_data['status'].upper()}[/plum3]")
         print(f"[bold]Runtime:[/bold] {format_time(job_data['runtime'])}")
-        print(f"[bold]Created At:[/bold] {job_data['created_at']}")
-        print(f"[bold]Updated At:[/bold] {job_data['updated_at']}\n")
+        print(f"[bold]Created at:[/bold] {created_at}")
+        print(f"[bold]Updated at:[/bold] {updated_at}\n")
 
         # Display files associated with the job
         if job_data["files"]:
@@ -377,6 +383,24 @@ def get_job_details(job_id: str):
             print(table)
         else:
             print("No files associated with this job.")
+
+        # Add log tail outputs
+        if job_data.get("output_log_tail"):
+            print("\n[bold]Output Log (last few lines):[/bold]")
+            print("[dim]─" * 50)
+            for line in job_data["output_log_tail"]:
+                print(f"  {line}")
+            print("[dim]─" * 50)
+
+        if job_data.get("error_log_tail"):
+            print("\n[bold red]Error Log (last few lines):[/bold red]")
+            print("[dim]─" * 50)
+            for line in job_data["error_log_tail"]:
+                print(f"  {line}")
+            print("[dim]─" * 50)
+
+        if not job_data.get("output_log_tail") and not job_data.get("error_log_tail"):
+            print("\nNo log output available.")
 
     except requests.exceptions.RequestException as e:
         typer.echo(f"Failed to fetch job details: {str(e)}", err=True)
