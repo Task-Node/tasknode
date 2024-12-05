@@ -17,6 +17,7 @@ from tasknode.auth import get_valid_token
 from tasknode.constants import API_URL
 from tasknode.utils import format_file_size, format_time
 
+
 def submit(
     script: str = typer.Argument(
         ...,
@@ -258,7 +259,9 @@ def jobs(offset: int = 0):
             created_at = created_dt.astimezone().strftime("%Y-%m-%d %H:%M:%S%z")
             updated_at = updated_dt.astimezone().strftime("%Y-%m-%d %H:%M:%S%z")
 
-            table.add_row(str(index), str(job["id"]), job["status"], created_at, updated_at, format_time(job["runtime"]))
+            table.add_row(
+                str(index), str(job["id"]), job["status"], created_at, updated_at, format_time(job["runtime"])
+            )
 
         # Print the table
         print("")
@@ -269,7 +272,9 @@ def jobs(offset: int = 0):
             next_offset = offset + limit
             print(f"To see the next page, run: `tasknode list-jobs --offset {next_offset}`")
             print("\nTo get details for a specific job, run: `tasknode job <job_id || index>`")
-            print("(for example `tasknode job 1` will get you the most recently created job and `tasknode job faa868f9-b0cb-4792-b176-64575dab86a7` will get you the job with that ID)")
+            print(
+                "(for example `tasknode job 1` will get you the most recently created job and `tasknode job faa868f9-b0cb-4792-b176-64575dab86a7` will get you the job with that ID)"
+            )
 
     except requests.exceptions.RequestException as e:
         typer.echo(f"Failed to fetch jobs: {str(e)}", err=True)
@@ -359,15 +364,15 @@ def get_job_details(job_id: str):
         print(f"[bold]Updated At:[/bold] {job_data['updated_at']}\n")
 
         # Display files associated with the job
-        if job_data['files']:
+        if job_data["files"]:
             table = Table(title="Generated Files")
             table.add_column("File Name", style="cyan")
             table.add_column("File Size", style="magenta")
             table.add_column("Timestamp", style="green")
 
-            for file in job_data['files']:
-                file_size = format_file_size(file['file_size'])
-                table.add_row(file['file_name'], file_size, file['file_timestamp'])
+            for file in job_data["files"]:
+                file_size = format_file_size(file["file_size"])
+                table.add_row(file["file_name"], file_size, file["file_timestamp"])
 
             print(table)
         else:

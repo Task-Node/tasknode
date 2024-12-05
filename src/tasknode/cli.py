@@ -8,6 +8,7 @@ import tasknode.tasks as tasks
 
 app = typer.Typer(no_args_is_help=True)
 
+
 def cleanup_deploy_files():
     """Clean up temporary deployment files."""
     try:
@@ -18,8 +19,10 @@ def cleanup_deploy_files():
     except Exception as e:
         typer.echo(f"Warning: Error during cleanup: {str(e)}", err=True)
 
+
 # Register the cleanup function to run on exit
 atexit.register(cleanup_deploy_files)
+
 
 def show_available_commands(ctx: typer.Context, value: bool = True):
     if value:

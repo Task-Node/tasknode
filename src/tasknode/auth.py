@@ -179,11 +179,9 @@ def get_valid_token() -> str:
     if not access_token:
         print("You are not logged in.")
         action = typer.prompt(
-            "\nWould you like to:\n1. Login\n2. Sign up\n3. Exit\nPlease choose (1-3)",
-            type=int,
-            default=3
+            "\nWould you like to:\n1. Login\n2. Sign up\n3. Exit\nPlease choose (1-3)", type=int, default=3
         )
-        
+
         if action == 1:
             # Prompt for credentials manually instead of relying on typer.Option
             email = typer.prompt("Email")
@@ -199,7 +197,7 @@ def get_valid_token() -> str:
             return tokens.get("access_token", "")
         else:
             exit(0)
-    
+
     print("🔑 Successfully authenticated.")
 
     # Try to use the token
