@@ -28,7 +28,7 @@ pip install tasknode
 Optionally, generate a sample Jupyter notebook to run:
 
 ```bash
-tasknode generate-sample
+tasknode generate-sample  # copies sample.ipynb to current directory
 ```
 
 Then, submit a Jupyter notebook to run in the cloud:
