@@ -16,6 +16,7 @@ from zoneinfo import ZoneInfo
 
 from tasknode.auth import get_valid_token
 from tasknode.constants import API_URL
+from tasknode.utils import format_time
 
 
 
@@ -261,7 +262,7 @@ def jobs(offset: int = 0):
             created_at = created_dt.astimezone().strftime("%Y-%m-%d %H:%M:%S%z")
             updated_at = updated_dt.astimezone().strftime("%Y-%m-%d %H:%M:%S%z")
 
-            table.add_row(str(job["id"]), job["status"], created_at, updated_at, job["runtime"])
+            table.add_row(str(job["id"]), job["status"], created_at, updated_at, format_time(job["runtime"]))
 
         # Print the table
         print("")
