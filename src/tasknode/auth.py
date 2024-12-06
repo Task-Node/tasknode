@@ -112,7 +112,7 @@ def reset_password(
         raise typer.Exit(1)
 
 
-def whoami():
+def account():
     """
     Show information about the currently logged in user.
     """

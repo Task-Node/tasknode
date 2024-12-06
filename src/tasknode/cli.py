@@ -35,7 +35,7 @@ def show_available_commands(ctx: typer.Context, value: bool = True):
         typer.echo("  • logout                       Log out of your TaskNode account")
         typer.echo("  • resend-verification          Resend the email verification code")
         typer.echo("  • reset-password               Reset your account password")
-        typer.echo("  • whoami                       Show current user information")
+        typer.echo("  • account                      Show account info for the logged in user")
 
         typer.echo("\n🚀 Task Management:")
         typer.echo("  • submit                       Submit a Python script to run")
@@ -119,11 +119,11 @@ def reset_password(
 
 
 @app.command()
-def whoami():
+def account():
     """
     Show information about the currently logged in user.
     """
-    return auth.whoami()
+    return auth.account()
 
 
 @app.command()
@@ -147,17 +147,6 @@ def jobs(offset: int = typer.Option(0, "--offset", "-o", help="Number of jobs to
     List your TaskNode jobs and their statuses.
     """
     return tasks.jobs(offset)
-
-
-@app.command()
-def generate_sample(
-    destination: str = typer.Argument(".", help="The destination directory to copy the notebook to"),
-):
-    """
-    Generate a sample Jupyter notebook in the specified directory.
-    The notebook is copied from the TaskNode repository's test.ipynb.
-    """
-    return tasks.generate_sample(destination)
 
 
 @app.command()
@@ -205,6 +194,17 @@ def download(
     Download all files associated with a specific job.
     """
     return tasks.download_job_files(job_id, destination)
+
+
+@app.command()
+def generate_sample(
+    destination: str = typer.Argument(".", help="The destination directory to copy the notebook to"),
+):
+    """
+    Generate a sample Jupyter notebook in the specified directory.
+    The notebook is copied from the TaskNode repository's test.ipynb.
+    """
+    return tasks.generate_sample(destination)
 
 
 if __name__ == "__main__":
