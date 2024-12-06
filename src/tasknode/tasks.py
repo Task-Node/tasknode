@@ -304,7 +304,7 @@ def generate_sample(
     The notebook is copied from the TaskNode repository's test.ipynb.
     """
     # GitHub raw content URL for the sample notebook
-    SAMPLE_NOTEBOOK_URL = "https://raw.githubusercontent.com/dtnewman/tasknode/main/sample.ipynb"
+    SAMPLE_NOTEBOOK_URL = "https://raw.githubusercontent.com/dtnewman/tasknode/main/test_scripts/sample.ipynb"
     OUTPUT_FILENAME = "sample.ipynb"
 
     # Construct the full path to the destination
