@@ -200,8 +200,6 @@ def get_valid_token() -> str:
         else:
             exit(0)
 
-    print("🔑 Successfully authenticated.")
-
     # Try to use the token
     response = requests.get(
         f"{API_URL}/api/v1/users/verify-token",

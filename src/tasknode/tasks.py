@@ -378,12 +378,19 @@ def get_job_details(job_id: str, tail_lines: int = 10):
         created_at = created_dt.astimezone().strftime("%Y-%m-%d %H:%M:%S%z")
         updated_at = updated_dt.astimezone().strftime("%Y-%m-%d %H:%M:%S%z")
 
-        # Display job details
-        print(f"\n[bold]Job ID:[/bold] {job_data['id']}")
-        print(f"[bold]Status:[/bold] [plum3]{job_data['status'].upper()}[/plum3]")
-        print(f"[bold]Runtime:[/bold] {format_time(job_data['runtime'])}")
-        print(f"[bold]Created at:[/bold] {created_at}")
-        print(f"[bold]Updated at:[/bold] {updated_at}\n")
+        # Display job details in a table
+        details_table = Table(show_header=False)
+        details_table.add_column("Field", style="bold")
+        details_table.add_column("Value")
+        
+        details_table.add_row("Status", f"[plum3]{job_data['status'].upper()}[/plum3]")
+        details_table.add_row("Job ID", job_data['id'])
+        details_table.add_row("Runtime", format_time(job_data['runtime']))
+        details_table.add_row("Created", created_at)
+        details_table.add_row("Updated", updated_at)
+        
+        print(details_table)
+        print("")
 
         # Display files associated with the job
         if job_data["files"]:
