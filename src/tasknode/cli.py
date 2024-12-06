@@ -167,6 +167,12 @@ def job(
         help="Job ID (UUID) or job index number (e.g., '1' for most recent job)",
         metavar="JOB_ID",
     ),
+    tail_lines: int = typer.Option(
+        10,
+        "--tail",
+        "-t",
+        help="Number of lines to show from the end of the log files (max 100)",
+    ),
 ):
     """
     Get details of a specific TaskNode job.
@@ -175,7 +181,10 @@ def job(
     - A job ID (UUID format)
     - A job index number (e.g., '1' for most recent job, '2' for second most recent)
     """
-    return tasks.get_job_details(job_id)
+    if tail_lines > 100:
+        typer.echo("Warning: Tail lines limit is 100", err=True)
+        raise typer.Exit(1)
+    return tasks.get_job_details(job_id, tail_lines)
 
 
 @app.command()

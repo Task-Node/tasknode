@@ -12,7 +12,13 @@ import sys
 import typer
 import zipfile
 from zoneinfo import ZoneInfo
-from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TimeRemainingColumn
+from rich.progress import (
+    Progress,
+    SpinnerColumn,
+    TextColumn,
+    BarColumn,
+    TimeRemainingColumn,
+)
 
 from tasknode.auth import get_valid_token
 from tasknode.constants import API_URL
@@ -45,11 +51,11 @@ def submit(
         typer.echo("Error: Only .py and .ipynb files are supported", err=True)
         raise typer.Exit(1)
 
-    deploy_full = Confirm.ask(
-        "\nDoes your script depend on other files in this directory (like modules, data files, or config files)?\n"
-        "[cyan]•[/cyan] Yes = deploy entire directory\n"
-        "[cyan]•[/cyan] No = deploy single script only (for standalone scripts) [cyan](default)[/cyan]\n",
-        default=False,
+    deploy_just_script = Confirm.ask(
+        "\nIs this a standalone script (i.e., not dependent on other files in this directory for config or data)?\n"
+        "[cyan]•[/cyan] Yes = deploy only the script\n"
+        "[cyan]•[/cyan] No = deploy entire directory [cyan](default)[/cyan]\n",
+        default=True,
     )
 
     # delete the tasknode_deploy folder if it already exists
@@ -87,7 +93,14 @@ def submit(
 
     print("Copying files... ", end="", flush=True)
     try:
-        if deploy_full:
+        if deploy_just_script:
+            # Copy only the script file, preserving its relative path
+            rel_path = os.path.relpath(script, ".")
+            dst_path = os.path.join("tasknode_deploy", rel_path)
+            os.makedirs(os.path.dirname(dst_path), exist_ok=True)  # Create subdirectories if needed
+            shutil.copy2(script, dst_path)
+
+        else:
             # Copy entire directory (existing behavior)
             for root, dirs, files in os.walk(".", topdown=True):
                 # Skip excluded directories
@@ -102,13 +115,11 @@ def submit(
                             os.makedirs(os.path.dirname(dst_path), exist_ok=True)
                             shutil.copy2(src_path, dst_path)
                     except PermissionError:
-                        typer.echo(f"Skipping file due to permission error: {src_path}", err=True)
-        else:
-            # Copy only the script file, preserving its relative path
-            rel_path = os.path.relpath(script, ".")
-            dst_path = os.path.join("tasknode_deploy", rel_path)
-            os.makedirs(os.path.dirname(dst_path), exist_ok=True)  # Create subdirectories if needed
-            shutil.copy2(script, dst_path)
+                        typer.echo(
+                            f"Skipping file due to permission error: {src_path}",
+                            err=True,
+                        )
+
     except Exception as e:
         typer.echo(f"Error copying files: {str(e)}", err=True)
         raise typer.Exit(1)
@@ -118,7 +129,7 @@ def submit(
     requirements_file = "requirements.txt"
     if os.path.exists(requirements_file):
         use_requirements_file = Confirm.ask(
-            f"\nA {requirements_file} file was found. How would you like to handle dependencies?\n"
+            f"\nA {requirements_file} file was found. Would you like to use that to handle dependencies?\n"
             "[cyan]•[/cyan] Yes = use requirements.txt file [cyan](default)[/cyan]\n"
             "[cyan]•[/cyan] No = use current environment's installed packages (like pip freeze)\n",
             default=True,
@@ -263,7 +274,12 @@ def jobs(offset: int = 0):
             updated_at = updated_dt.astimezone().strftime("%Y-%m-%d %H:%M:%S%z")
 
             table.add_row(
-                str(index), str(job["id"]), job["status"], created_at, updated_at, format_time(job["runtime"])
+                str(index),
+                str(job["id"]),
+                job["status"],
+                created_at,
+                updated_at,
+                format_time(job["runtime"]),
             )
 
         # Print the table
@@ -335,7 +351,7 @@ def create_zip(source_path, output_path):
                 zipf.write(file_path, arcname)
 
 
-def get_job_details(job_id: str):
+def get_job_details(job_id: str, tail_lines: int = 10):
     """
     Get details of a specific TaskNode job using either a job ID (UUID) or job index number.
     """
@@ -349,6 +365,7 @@ def get_job_details(job_id: str):
         # Fetch job details using either UUID or index number
         response = requests.get(
             f"{API_URL}/api/v1/jobs/get/{job_id}",
+            params={"tail_lines": tail_lines},
             headers={"Authorization": f"Bearer {access_token}"},
         )
 
@@ -414,7 +431,9 @@ def get_job_details(job_id: str):
             or job_data["status"] == "failed"
             and (has_generated_files or has_output_log or has_error_log)
         ):
-            print(f"\nTo download files associated with this job, run: `[blue]tasknode download {job_data['id']}[/blue]`\n")
+            print(
+                f"\nTo download files associated with this job, run: `[blue]tasknode download {job_data['id']}[/blue]`\n"
+            )
 
     except requests.exceptions.RequestException as e:
         typer.echo(f"Failed to fetch job details: {str(e)}", err=True)
@@ -479,7 +498,7 @@ def download_job_files(job_identifier: str, destination: str = "."):
 
                 response = requests.get(file["signedUrl"], stream=True)
                 response.raise_for_status()
-                
+
                 total_size = int(response.headers.get("content-length", 0))
                 block_size = 1024 * 1024  # 1MB chunks
                 downloaded = 0
@@ -492,7 +511,7 @@ def download_job_files(job_identifier: str, destination: str = "."):
                             # Update progress as percentage and force refresh
                             percentage = min((downloaded / total_size) * 100, 100)
                             progress.update(file_task, completed=percentage, refresh=True)
-                
+
                 # Complete the file task
                 progress.update(file_task, completed=100, refresh=True)
                 # Update overall progress
