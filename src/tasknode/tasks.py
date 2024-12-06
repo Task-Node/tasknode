@@ -288,7 +288,7 @@ def jobs(offset: int = 0):
             print(f"To see the next page, run: `tasknode list-jobs --offset {next_offset}`")
             print("\nTo get details for a specific job, run: `tasknode job <job_id || index>`")
             print(
-                "(for example `tasknode job 1` will get you the most recently created job and `tasknode job faa868f9-b0cb-4792-b176-64575dab86a7` will get you the job with that ID)\n"
+                "(for example [yellow]`tasknode job 1`[/yellow] will get you the most recently created job and [yellow]`tasknode job faa868f9-b0cb-4792-b176-64575dab86a7`[/yellow] will get you the job with that ID)\n"
             )
 
     except requests.exceptions.RequestException as e:
@@ -435,7 +435,7 @@ def get_job_details(job_id: str, tail_lines: int = 10):
             and (has_generated_files or has_output_log or has_error_log)
         ):
             print(
-                f"\nTo download files associated with this job, run: `[blue]tasknode download {job_data['id']}[/blue]`\n"
+                f"\n[blue]To download generated files and logs/outputs associated with this job, run[/blue]: `[yellow]tasknode download {job_data['id']}[/yellow]`\n"
             )
 
     except requests.exceptions.RequestException as e:
