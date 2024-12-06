@@ -52,9 +52,9 @@ def submit(
         raise typer.Exit(1)
 
     deploy_just_script = Confirm.ask(
-        "\nIs this a standalone script (i.e., not dependent on other files in this directory for config or data)?\n"
-        "[cyan]•[/cyan] Yes = deploy only the script\n"
-        "[cyan]•[/cyan] No = deploy entire directory [cyan](default)[/cyan]\n",
+        "\nIs this a standalone script (i.e., it does not depend on other files in this directory for config or data)?\n"
+        "[cyan]•[/cyan] Yes = deploy only the script [cyan](default)[/cyan]\n"
+        "[cyan]•[/cyan] No = deploy entire directory\n",
         default=True,
     )
 
@@ -99,7 +99,6 @@ def submit(
             dst_path = os.path.join("tasknode_deploy", rel_path)
             os.makedirs(os.path.dirname(dst_path), exist_ok=True)  # Create subdirectories if needed
             shutil.copy2(script, dst_path)
-
         else:
             # Copy entire directory (existing behavior)
             for root, dirs, files in os.walk(".", topdown=True):
@@ -115,11 +114,8 @@ def submit(
                             os.makedirs(os.path.dirname(dst_path), exist_ok=True)
                             shutil.copy2(src_path, dst_path)
                     except PermissionError:
-                        typer.echo(
-                            f"Skipping file due to permission error: {src_path}",
-                            err=True,
-                        )
-
+                        typer.echo(f"Skipping file due to permission error: {src_path}", err=True)
+           
     except Exception as e:
         typer.echo(f"Error copying files: {str(e)}", err=True)
         raise typer.Exit(1)
@@ -410,14 +406,14 @@ def get_job_details(job_id: str, tail_lines: int = 10):
 
         # Add log tail outputs
         if has_output_log:
-            print("\n[bold]Output log tail (last 10 lines):[/bold]")
+            print(f"\n[bold]Output log tail (last {tail_lines} lines):[/bold]")
             print("[dim cyan]─" * 50)
             for line in job_data["output_log_tail"]:
                 print(f"  {line}")
             print("[dim cyan]─" * 50)
 
         if has_error_log:
-            print("\n[bold red]Error log tail (last 10 lines):[/bold red]")
+            print(f"\n[bold red]Error log tail (last {tail_lines} lines):[/bold red]")
             print("[dim red]─" * 50)
             for line in job_data["error_log_tail"]:
                 print(f"  {line}")
