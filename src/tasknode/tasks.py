@@ -12,7 +12,7 @@ import sys
 import typer
 import zipfile
 from zoneinfo import ZoneInfo
-from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn, TimeRemainingColumn
+from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TimeRemainingColumn
 
 from tasknode.auth import get_valid_token
 from tasknode.constants import API_URL
@@ -454,10 +454,10 @@ def download_job_files(job_identifier: str, destination: str = "."):
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
             BarColumn(),
-            TaskProgressColumn(),
+            TextColumn("[progress.percentage]{task.completed:.0f}/{task.total}"),
             TimeRemainingColumn(),
         ) as progress:
-            overall_task = progress.add_task("[cyan]Overall progress", total=len(data["files"]))
+            overall_task = progress.add_task("[cyan]Overall progress", total=len(data["files"]), completed=0)
 
             for file in data["files"]:
                 filename = file["filename"]
