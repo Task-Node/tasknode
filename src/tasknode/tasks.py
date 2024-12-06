@@ -424,10 +424,6 @@ def get_job_details(job_id: str):
 def download_job_files(job_identifier: str, destination: str = "."):
     """
     Download all files associated with a specific job.
-
-    Args:
-        job_identifier: Either a UUID or an index number (e.g., "1" for most recent job)
-        destination: Directory where files should be downloaded
     """
     try:
         access_token = get_valid_token()
@@ -478,24 +474,29 @@ def download_job_files(job_identifier: str, destination: str = "."):
                         counter += 1
                     print(f"[yellow]      Saving as '{final_path}' instead[/yellow]")
 
-                # Get file size first
-                response = requests.head(file["signedUrl"])
-                file_size = int(response.headers.get("content-length", 0))
+                # Create file task before getting size
+                file_task = progress.add_task(f"[magenta]Downloading {filename}", total=100)
 
-                # Download with progress
-                file_task = progress.add_task(f"[magenta]Downloading {filename}", total=file_size)
-
-                # Stream the download
                 response = requests.get(file["signedUrl"], stream=True)
                 response.raise_for_status()
+                
+                total_size = int(response.headers.get("content-length", 0))
+                block_size = 1024 * 1024  # 1MB chunks
+                downloaded = 0
 
                 with open(final_path, "wb") as f:
-                    for chunk in response.iter_content(chunk_size=8192):
+                    for chunk in response.iter_content(chunk_size=block_size):
                         if chunk:
                             f.write(chunk)
-                            progress.update(file_task, advance=len(chunk))
-
-                progress.update(overall_task, advance=1)
+                            downloaded += len(chunk)
+                            # Update progress as percentage and force refresh
+                            percentage = min((downloaded / total_size) * 100, 100)
+                            progress.update(file_task, completed=percentage, refresh=True)
+                
+                # Complete the file task
+                progress.update(file_task, completed=100, refresh=True)
+                # Update overall progress
+                progress.update(overall_task, advance=1, refresh=True)
 
         print("\n[green]✓[/green] All files downloaded successfully!")
 
