@@ -1,6 +1,6 @@
 # TaskNode 🔄
 
-[![PyPI version](https://img.shields.io/pypi/v/tasknode.svg?color=green)](https://pypi.org/project/tasknode/)
+[![PyPI version](https://img.shields.io/pypi/v/tasknode.svg?color=4f2a52)](https://pypi.org/project/tasknode/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Status: Alpha](https://img.shields.io/badge/Status-Alpha-orange.svg)](https://github.com/tasknode/tasknode)
 
