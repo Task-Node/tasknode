@@ -41,7 +41,7 @@ def show_available_commands(ctx: typer.Context, value: bool = True):
         typer.echo("  • submit                    Submit a Python script to run")
         typer.echo("  • jobs                      List your TaskNode jobs")
         typer.echo("  • sample-notebook           Generate a sample Jupyter notebook to test with")
-        typer.echo("  • job <job_id || index>     Get details for a specific TaskNode job")
+        typer.echo("  • job <job_id || index>     Get status and details for a specific TaskNode job")
         typer.echo("\nℹ️  Help:")
         typer.echo("  • help                      Show help for the TaskNode CLI")
 

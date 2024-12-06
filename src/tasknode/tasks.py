@@ -103,8 +103,10 @@ def submit(
                     except PermissionError:
                         typer.echo(f"Skipping file due to permission error: {src_path}", err=True)
         else:
-            # Copy only the script file
-            dst_path = os.path.join("tasknode_deploy", os.path.basename(script))
+            # Copy only the script file, preserving its relative path
+            rel_path = os.path.relpath(script, ".")
+            dst_path = os.path.join("tasknode_deploy", rel_path)
+            os.makedirs(os.path.dirname(dst_path), exist_ok=True)  # Create subdirectories if needed
             shutil.copy2(script, dst_path)
     except Exception as e:
         typer.echo(f"Error copying files: {str(e)}", err=True)
@@ -273,7 +275,7 @@ def jobs(offset: int = 0):
             print(f"To see the next page, run: `tasknode list-jobs --offset {next_offset}`")
             print("\nTo get details for a specific job, run: `tasknode job <job_id || index>`")
             print(
-                "(for example `tasknode job 1` will get you the most recently created job and `tasknode job faa868f9-b0cb-4792-b176-64575dab86a7` will get you the job with that ID)"
+                "(for example `tasknode job 1` will get you the most recently created job and `tasknode job faa868f9-b0cb-4792-b176-64575dab86a7` will get you the job with that ID)\n"
             )
 
     except requests.exceptions.RequestException as e:
@@ -386,18 +388,18 @@ def get_job_details(job_id: str):
 
         # Add log tail outputs
         if job_data.get("output_log_tail"):
-            print("\n[bold]Output Log (last few lines):[/bold]")
-            print("[dim]─" * 50)
+            print("\n[bold]Output log tail (last 10 lines):[/bold]")
+            print("[dim cyan]─" * 50)
             for line in job_data["output_log_tail"]:
                 print(f"  {line}")
-            print("[dim]─" * 50)
+            print("[dim cyan]─" * 50)
 
         if job_data.get("error_log_tail"):
-            print("\n[bold red]Error Log (last few lines):[/bold red]")
-            print("[dim]─" * 50)
+            print("\n[bold red]Error log tail (last 10 lines):[/bold red]")
+            print("[dim red]─" * 50)
             for line in job_data["error_log_tail"]:
                 print(f"  {line}")
-            print("[dim]─" * 50)
+            print("[dim red]─" * 50)
 
         if not job_data.get("output_log_tail") and not job_data.get("error_log_tail"):
             print("\nNo log output available (check back soon)\n")
