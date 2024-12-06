@@ -12,6 +12,7 @@ import sys
 import typer
 import zipfile
 from zoneinfo import ZoneInfo
+from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn, TimeRemainingColumn
 
 from tasknode.auth import get_valid_token
 from tasknode.constants import API_URL
@@ -386,24 +387,118 @@ def get_job_details(job_id: str):
         else:
             print("No generated files associated with this job.")
 
+        has_output_log = job_data.get("output_log_tail", []) and len(job_data["output_log_tail"]) > 0
+        has_error_log = job_data.get("error_log_tail", []) and len(job_data["error_log_tail"]) > 0
+        has_generated_files = job_data.get("files", []) and len(job_data["files"]) > 0
+
         # Add log tail outputs
-        if job_data.get("output_log_tail"):
+        if has_output_log:
             print("\n[bold]Output log tail (last 10 lines):[/bold]")
             print("[dim cyan]─" * 50)
             for line in job_data["output_log_tail"]:
                 print(f"  {line}")
             print("[dim cyan]─" * 50)
 
-        if job_data.get("error_log_tail"):
+        if has_error_log:
             print("\n[bold red]Error log tail (last 10 lines):[/bold red]")
             print("[dim red]─" * 50)
             for line in job_data["error_log_tail"]:
                 print(f"  {line}")
             print("[dim red]─" * 50)
 
-        if not job_data.get("output_log_tail") and not job_data.get("error_log_tail"):
+        if not has_output_log and not has_error_log:
             print("\nNo log output available (check back soon)\n")
+
+        if (
+            job_data["status"] == "completed"
+            or job_data["status"] == "failed"
+            and (has_generated_files or has_output_log or has_error_log)
+        ):
+            print(f"\nTo download files associated with this job, run: `[blue]tasknode download {job_data['id']}[/blue]`\n")
 
     except requests.exceptions.RequestException as e:
         typer.echo(f"Failed to fetch job details: {str(e)}", err=True)
+        raise typer.Exit(1)
+
+
+def download_job_files(job_identifier: str, destination: str = "."):
+    """
+    Download all files associated with a specific job.
+
+    Args:
+        job_identifier: Either a UUID or an index number (e.g., "1" for most recent job)
+        destination: Directory where files should be downloaded
+    """
+    try:
+        access_token = get_valid_token()
+    except Exception as e:
+        typer.echo(f"Authentication error: {str(e)}", err=True)
+        raise typer.Exit(1)
+
+    try:
+        # Get signed URLs for all files
+        response = requests.get(
+            f"{API_URL}/api/v1/jobs/{job_identifier}/download_urls",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+
+        if response.status_code == 404:
+            typer.echo(f"Job not found", err=True)
+            raise typer.Exit(1)
+
+        response.raise_for_status()
+        data = response.json()
+
+        if not data["files"]:
+            print("\n[yellow]No files available for download.[/yellow]")
+            return
+
+        # Create progress bars
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            BarColumn(),
+            TaskProgressColumn(),
+            TimeRemainingColumn(),
+        ) as progress:
+            overall_task = progress.add_task("[cyan]Overall progress", total=len(data["files"]))
+
+            for file in data["files"]:
+                filename = file["filename"]
+                base_path = os.path.join(destination, filename)
+
+                # Check if file exists and generate new name if needed
+                final_path = base_path
+                counter = 2
+                if os.path.exists(final_path):
+                    print(f"[yellow]Note:[/yellow] File '{base_path}' already exists")
+                    while os.path.exists(final_path):
+                        name, ext = os.path.splitext(base_path)
+                        final_path = f"{name}_{counter}{ext}"
+                        counter += 1
+                    print(f"[yellow]      Saving as '{final_path}' instead[/yellow]")
+
+                # Get file size first
+                response = requests.head(file["signedUrl"])
+                file_size = int(response.headers.get("content-length", 0))
+
+                # Download with progress
+                file_task = progress.add_task(f"[magenta]Downloading {filename}", total=file_size)
+
+                # Stream the download
+                response = requests.get(file["signedUrl"], stream=True)
+                response.raise_for_status()
+
+                with open(final_path, "wb") as f:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        if chunk:
+                            f.write(chunk)
+                            progress.update(file_task, advance=len(chunk))
+
+                progress.update(overall_task, advance=1)
+
+        print("\n[green]✓[/green] All files downloaded successfully!")
+
+    except requests.exceptions.RequestException as e:
+        typer.echo(f"\nFailed to download files: {str(e)}", err=True)
         raise typer.Exit(1)
