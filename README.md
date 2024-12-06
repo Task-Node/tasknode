@@ -3,7 +3,7 @@
 [![PyPI version](https://img.shields.io/pypi/v/tasknode.svg)](https://pypi.org/project/tasknode/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-> **Note**: TaskNode is currently in beta. While fully functional, you may encounter occasional issues. Please report any bugs on our GitHub issues page.
+> **Note**: TaskNode is currently in alpha. While fully functional, you may encounter occasional issues. Please report any bugs on our GitHub issues page.
 
 Do you ever:
 
