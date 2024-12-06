@@ -115,7 +115,7 @@ def submit(
                             shutil.copy2(src_path, dst_path)
                     except PermissionError:
                         typer.echo(f"Skipping file due to permission error: {src_path}", err=True)
-           
+
     except Exception as e:
         typer.echo(f"Error copying files: {str(e)}", err=True)
         raise typer.Exit(1)
@@ -382,13 +382,13 @@ def get_job_details(job_id: str, tail_lines: int = 10):
         details_table = Table(show_header=False)
         details_table.add_column("Field", style="bold")
         details_table.add_column("Value")
-        
+
         details_table.add_row("Status", f"[plum3]{job_data['status'].upper()}[/plum3]")
-        details_table.add_row("Job ID", job_data['id'])
-        details_table.add_row("Runtime", format_time(job_data['runtime']))
+        details_table.add_row("Job ID", job_data["id"])
+        details_table.add_row("Runtime", format_time(job_data["runtime"]))
         details_table.add_row("Created", created_at)
         details_table.add_row("Updated", updated_at)
-        
+
         print(details_table)
         print("")
 
