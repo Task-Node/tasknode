@@ -87,7 +87,7 @@ def reset_password(
     """
     try:
         # Request password reset code
-        response = requests.post(f"{API_URL}/api/v1/users/forgot-password", json={"email": email})
+        response = requests.post(f"{API_URL}/api/v1/users/reset-password", json={"email": email})
         response.raise_for_status()
         typer.echo("\n✉️  A password reset code has been sent to your email.")
 
@@ -97,7 +97,7 @@ def reset_password(
 
         # Confirm password reset
         response = requests.post(
-            f"{API_URL}/api/v1/users/confirm-forgot-password",
+            f"{API_URL}/api/v1/users/confirm-reset-password",
             json={
                 "email": email,
                 "confirmation_code": confirmation_code,
